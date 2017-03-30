@@ -1,0 +1,202 @@
+THE PITCH
+
+I want to create a MUD in which criminal exiles from across the Solar System are consigned to a new and uninhabited planet orbiting a distant star. This planet will feature hostile alien life, such as the Chironic fungus, whose permutations cover a great deal of the world and make extensive exploration a difficulty. Gameplay is expected to be emergent, and to center around acquiring and using resources.
+
+PLAYERS
+
+Player characters will track health, blood, stamina, nutrition, water, and NRS.
+
+* Health: What it sounds like.
+* Blood: Also what it sounds like, ranging from 0 - 100%. You need to keep blood above 85% to avoid penalties, and above 60% to avoid serious, serious problems.
+* Stamina: Also what it sounds like. Stamina regenerates from nutrition and water.
+* Nutrition: Depletes in order to regenerate stamina. Restored with food.
+* Water: Depletes in order to regenerate stamina, faster than hunger does. Restored with water.
+* NRS: See below. Depletes in order to regenerate water and nutrition.
+
+NANOROBOTIC SYMBIOTES
+
+Player characters also have uniform access to mentally-directed nanorobotic symbiotes (NRS). What do these imply, you ask? NRS permit:
+
+* Construction (Faster-than-normal construction of buildings, tools, robotic minions, and other necessities.)
+* Cosmetics (The transformation of characters' appearances, gender presentation, and capabilities on command, given enough energy.)
+* Remote Communication (Forms a low-grade mind-machine web, permitting communication at range provided that a continuous NRS presence links one character and another.)
+* Wiki-Based Help Files (This same capability also permits shared organizational and global informational resources, in the form of collaboratively edited and maintained help files. In sum total, this NRS capability is called the Hyperweb.)
+* Protection from most common diseases, pollutants, and impurities in food.
+* Regeneration (Prolonged survival without food and water.  If a character were about to start starving or dying of thirst, a unit of NRS would deplete itself, acting as a nutritional boost; if no NRS would remain afterward, they place themselves in standby, self-replicating back into proliferation once their host is no longer starving. Both stamina and NRS regeneration draw on a character's satiation level.)
+* Territory Claims (The capability to claim territory, either individually or as part of an organization, by seeding it with NRS that interfere with other attempted claims or construction upon that site. This also prevents the Chironic fungus from growing back onto it, if it's been cleared - other alien life can come and go, however.)
+
+NRS SPECIALIZATIONS
+
+The idea is that, while everyone can do things at a subsistence level, doing so at a level that allows for a significant edge requires specialized NRS. A player can pick one, and only one, specialty at once, and they are permitted to change their specialty only infrequently. This, as well as the organizational system, encourages players to team together and diversify.
+
+* Agricultural - bonus to growing crops in your territory.
+* Architectural - bonus to manufacturing and repairing buildings.
+* Armorer - bonuses to crafted armor - less weight, more protection, or more durability.
+* Combative - gives a player an edge in combat scenarios.
+* Curative - bonus to healing, and grants the ability to heal other players directly.
+* Electrician - significant bonus to power generation in your territory.
+* Extractor - bonus to producing ore in your territory.
+* Gunsmith - bonuses to crafted weapons - faster, more damaging, or more durable.
+* Machinist - bonus to manufacturing and repairing machinery.
+* Plastician - bonus to producing plastics in your territory.
+* Roboticist - significant bonus to any robots created.
+* Textiles - bonus to crafting items out of cloth and other fiber-based materials.
+
+BUILDINGS
+
+Buildings will be accessible from a single outdoors room, where they are considered to be located. Each indoor room can have two subrooms (four, if built by an Architectural specialist) inside of them. Each room inside of a building can contain either machines (one, or up to three if placed by a Machinist) or furniture - not both.
+
+Moreover, rooms in a building may be designated as storage. No machines may be placed in a storage room, and only certain kinds of furniture, like crates and shelves.
+
+MACHINES AND POWER
+
+Machines are external objects used to produce various goods. Some can be placed inside of buildings, but others go outside. If placed outside, only one machine can be in a room at a time, and those placed on water must be adjacent to land. Most likewise require either power, and/or the expenditure of time and stamina, to work manually.
+
+* Battery: Outdoor-optional - stores units of power.
+* Building: Outdoor-only - creates an indoor room that can be ENTERed from the outside. Can be further modified.
+* Dam: Outdoor-only, water-only - generates power from water flow.
+* Fallout Sink: Outdoor-only, requires power - absorbs up to 100 percentage points of fallout from a player's territory, preventing it from having an effect.
+* Field: Outdoor-only - no power. Requires water. Used to grow units of food.
+* Force Field: Outdoor-only, requires power - blocks off a link between two rooms while activated. Can coexist with another machine.
+* Forge: Indoor-only - transforms refined metal into various items.
+* Generator: Outdoor only - generates power from refined oil.
+* Loom: Produces cloth from units of fiber, 1:1.
+* Metal Refiner: Produces refined metal from various ores, 1:1.
+* Oil Press: Derives oils from various vegetables, 1:1.
+* Oil Refiner: Produces refined oil from crude oil, 1:1.
+* Pasture: Outdoor-only - no power. Requires water, grains. Used to enclose livestock.
+* Plastic Reactor: Derives plastics from oils, 1:1.
+* Reservoir: Outdoor-optional - stores water.
+* Solar Panel: Outdoor only - generates power during clear weather.
+* Turbine: Outdoor only - generates power, given sufficiently windy conditions.
+* Water Filter: Outdoor-only, water-only - draws units of filtered water.
+* Wall: Outdoor-only - blocks off a link between two rooms until destroyed. Can coexist with another machine.
+* Well: Outdoor-optional - draws 1 unit of filtered water per use.
+* Winnower: Outdoor-optional - derives cereal grains from cereal, 1:1.
+
+Power requires batteries to store, as well as cables connecting it to the things that use it. Whether or not a room has cable running through it is a binary value.
+
+In the absence of power, machines must instead be operated manually. By default, power is owned on a per-player basis, but it can also be transferred to bordering players or to an organizational power pool.
+
+Water can be stored and transferred in a similar manner, using reservoirs and pipes.
+
+FEATURES
+
+Environmental features occupy the same 'slot' as machines and buildings do. Some are pre-existing, some are spread by the Chironic fungus, and some are placed by players.
+
+* Forest: If placed in a player-owned room, increases fallout absorption for the owner. May provide a small amount of wood, incrementally, or be harvested for a large amount of wood. May spread to adjacent, unclaimed land, degrading other features should they exist.
+
+* Flower Garden: If placed in a player-owned room, increases fallout absorption for the owner. Plant up to ten different kinds of flowers. Provides one flower each of the planted types, once per real-life day.
+
+	- Daffodils
+	- Daisies
+	- Roses (color variable)
+
+* Fungus: Increases stamina costs for non-symbiotic entities moving in and out of the room. May spawn alien life. May spread to adjacent, unclaimed land, degrading other features should they exist. Fungus may or may not have permutations of its own:
+
+	- Fringe. This fungus is the least threatening kind. It occurs if there is one or more adjacent room in which no fungus is growing.
+	- Medial. This fungus is the usual kind, found when it is surrounded on all sides by any form of fungus.
+	- Tower. This fungal feature occurs in a fungus-ridden room in which all adjacent rooms are medial fungus. It is the most likely to spawn animals, and is also able to attack adjacent players via psi.
+
+* Herb Garden: If placed in a player-owned room, increases fallout absorption for the owner. Plant up to ten different kinds of herbs. Provides 1 unit of each planted herb, once per real-life day.
+
+* Orchard: If placed in a player-owned room, increases fallout absorption for the owner. May provide a small amount of resources, incrementally, or be harvested for a large amount of wood. May spread to adjacent, unclaimed land, degrading other features should they exist. Seeds of the necessary kind of tree must be on hand in order to plant an orchard, and water is necessary as well.
+
+	- Apples
+	- Almonds
+	- Cherries
+	- Olives
+	- Oranges
+	- Peaches
+	- Pomegranates
+	- Walnuts
+
+RESOURCE CHAINS
+
+1 unit cotton -> 1 unit cloth (Machine: Loom) -> crafting applications
+1 unit cereal -> 1 unit grain (Machine: Winnower) -> crafting applications
+1 unit sunflower -> 1 unit sunflower seeds (Machine: Press)
+1 unit olives/corn/cottonseeds/peanuts/sunflower seeds + 2 units water -> 1 unit vegetable oil (Building: Oil Press)
+1 unit ore + 2 units water -> 1 unit metal (Machine: Metal Refiner) -> crafting applications
+1 unit oil + 2 units water -> 1 unit refined oil (Machine: Oil Refiner)
+1 unit refined oil + 2 units water -> 1 unit plastic (Machine: Plastic Reactor) -> crafting applications
+
+LAND AND ORGANIZATIONS
+
+Organizations will be solely player-created, with a high degree of customization available. Both organizations and individual players can lay claim to individual rooms - a player who joins an organization can choose to maintain their personal ownership, or share their territory with their organization (it remains under their name as well, however.) In addition, organizations result in slightly slower NRS depletion for their members, given the more robust field.
+
+An organization's territory is limited only in the sense that it must be continuous - if it holds existing territory, any new territory must connect to it. A player cannot claim more than forty rooms, and thus, organizations cannot claim more than forty rooms per member. Organizations and players may build upon land which they have claimed, most usually for the purpose of creating buildings. Buildings will see a number of uses, and whoever builds them is permitted to customize them.
+
+ROBOTS
+
+Worker robots are created objects, designed to assist a player on their territory. With permission, they can travel into the territory of other players, or organizational permission can be extended to allow movement within an organization's borders.
+
+Although robots do not have stamina, as players do, they rely upon power to operate, and are capable of assimilating and storing it from the local power grid.
+
+Players may create up to five free robots - after that, each additional robot comes at the expense of potential territory held. I.E. if a player has 10 robots, that's 5 past the free limit, and thus they can only hold 35 rooms. This is a bit shakier, and will need to be rebalanced as we figure out how much robots impact things in playtesting.
+
+Worker robots are capable of doing the following:
+
+* Gathering: They may gather resources from a specified point, within a permitting player's territory, or within organizational territory. Specified points can include fields and machines.
+* Guarding: Robots, if armed with weapons, may be set to guard a permitting player's territory. Unlike with other cases, they cannot guard more than one player's territory.
+* Repair: Robots can repair machinery and buildings, using the appropriate resources.
+* Transportation: They may move resources to a specified point, within a permitting player's territory, or within organizational territory. Specified points can include storage rooms and machines.
+* Work: Robots may work specified machines.
+
+Moreover, it will be possible to program worker robots with simple sequences and conditional behavior, allowing for more sophisticated uses. Potential cases include:
+
+* If the given machine has produced X output, go gather and store it.
+* Transport X resources to location Y only if owning player has Z surplus.
+* Work X machine only if Y resources are under Z baseline.
+
+CONFLICT
+
+PvE elements - players will confront and clear away the Chironic fungus to open up new potential territory, and claim it. The Chironic fungus is difficult to traverse, and is defended, symbiotically, by the alien life of the planet. Those who venture into it are engaging in high-risk, high-reward behavior. Wildlife will often stray from the bounds of the fungus, intruding onto player lands and attempting to destroy anything they find.
+
+While within the fungus, wildlife remains satiated - outside of it, it will seek out food and water sources to replenish itself.
+
+PvP elements - both player versus player and organization versus organization - will be included. The stakes of PvP will primarily be land and resources, and losing characters may suffer various impairments that make them less effective. Permadeath, while possible, will be very difficult to inflict, given the fact that a character's NRS can bring them back from almost anything. It can and will happen, however.
+
+Players will be able to inflict damage against buildings, machines, and other players. They can do this either through melee combat, or ranged combat. Melee combat requires the player and target to be in the same room - ranged combat requires room adjacency.
+
+FALLOUT
+
+Although global warming, owing to the NRS scrubbing the atmosphere, is a practical impossibility, there are other forms of pollution that occur as a byproduct of NRS. We will refer to this as fallout.
+
+Fallout is a per-room variable, ranging from 0% to 100%. It occurs as a consequence of using machines and producing resources. Rooms claimed by players will slowly absorb fallout, although the rate of fallout absorption is constant inside of each player's territory. This absorption will prioritize fallout in a Fallout Sink first, then move on to the rooms of lowest concentration.
+
+Rooms can only tolerate so much fallout before it has to spread - if a room's fallout percentage is over 25% that of at least one adjoining room, it will slowly spread into those rooms.
+
+Fallout that hits water will be gradually distributed, as evenly as possible, throughout that body of water. Affected water will take longer to filter, and water polluted above 50% will be unusable.
+
+More generally, levels of fallout will impact resource yields from that territory, with 100% fallout making the land fully unusable, and also immune to cleanup by the usual NRS means. Let's lay out the initial thoughts here:
+
+Under 25% fallout: resource yields are slowed down at a ratio = (Base Time) + (Fallout * 4)
+25% - 50% fallout: resource yields are much slower at a ratio = (Base Time * 2) + ((Fallout - 25) * 8)
+50% - 75% fallout: resource yields are much slower at a ratio = (Base Time * 4) + ((Fallout - 50) * 16)
+75% - 99% fallout: resource yields are much slower at a ratio = (Base Time * 8) + ((Fallout - 75) * 32)
+Full 100% fallout: no resource yields whatsoever.
+
+If fallout spreads into rooms ridden with Chironic fungus, it will respond very, very aggressively, generating more wildlife than usual and pointing it at nearby, player-owned territory.
+
+The primary means that players have of dealing with fallout is to move it elsewhere, rather than cleaning it up. This could mean elsewhere in their territory, or it could mean outside of their territory.
+
+Removing fallout is time-consuming, will require the expenditure of considerable resources, and cannot be automated by robot labor. To be determined.
+
+PAY-TO-PLAY?
+
+Donations will be solicited in exchange for the experience as-is, or in exchange for cosmetic quirks that have no bearing on the mechanics of the game. The goal is an open, collaborative discourse intended for the collective improvement of the game, and the more money we get, the more time we have to work on it.
+
+GUIDELINES
+
+Likewise, our guidelines are as minimal as possible:
+
+* Above all, we assume good faith. This means you're acting with basic respect and goodwill toward other players, and should expect the same in kind. This has nothing to do with IC behavior - it means that you remember, as a player, that 1) everyone behind a character is a human being and should be treated as such, 2) this is a game, and 3) everyone should be having fun and deserves to have fun. All of the other rules emerge from this one, so if in doubt, refer back here.
+
+* Harassment and bigotry are unacceptable on any kind of OOC level. We understand that bigotry may feature in RP, but bearing in mind the futuristic setting and the assumption of good faith, any real-world inspired bigotry should likely be modulated accordingly - conflicts with few or no roots in real-world systems of prejudice are a lot more fun, anyway. This rule should not be construed as prohibiting swearing; by all means, swear away. Just avoid the slurs.
+
+* Bearing in mind that children may play this game, you should keep explicit sexuality out of public areas. These sorts of scenes should take place privately, where there can be no reasonable expectation of an uninterested party stumbling onto them. All players involved in sexual scenes are collectively responsible for determining consent and legality. If one or both of these aspects are absent, the scene should not continue.
+
+* Blatant abuse of bugs and mechanics is something we come down hard on. If it looks like it shouldn't work that way, tell us and stay away from it until we've fixed it. Though other kinds of metagaming - herein understood as 'an abuse of outside player knowledge' - cannot be prevented, we discourage them. You'll get more out of the game if you're responding to it organically.
+
+* We also can't prevent automation, although we discourage it, too. Whatever consequences you may incur via automation are your own to suffer. Our general assumption is that you're there at the keyboard. If you're not, that's on you.
