@@ -1,4 +1,4 @@
-<h1>Xenobound</h1>
+<img src="https://raw.githubusercontent.com/Obscurity/Xenobound/master/git-page/xenobound-logo.png" />
 
 Survive on a hostile star.
 
