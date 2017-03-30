@@ -1,0 +1,8 @@
+omnimudplus\Mobile.class
+omnimudplus\Parser.class
+omnimudplus\Omnimud.class
+omnimudplus\Container.class
+omnimudplus\Entity.class
+omnimudplus\Room.class
+omnimudplus\Direction.class
+omnimudplus\WorkerRunnable.class
