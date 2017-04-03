@@ -1,18 +1,115 @@
 package omnimudplus;
 
+import java.io.Serializable;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
-public class Area extends Zone {
+public class Area implements Serializable {
 	
-	private String name;
+	protected String name;
 	
-	private String longName;
+	protected String longName;
 	
-	private LinkedList<Room> rooms = new LinkedList<Room>();
+	protected String description;
 	
-	private Room origin;
+	protected LinkedList<Room> rooms = new LinkedList<Room>();
 	
+	protected Room origin;
 	static final private long serialVersionUID = 1L;
+	
+	protected static final LockObject stringLock = new LockObject();
+	
+	protected String areaDesc;
+	
+	protected static final LockObject mobileLock = new LockObject();
+	
+	protected LinkedHashSet<Mobile> mobiles = new LinkedHashSet<Mobile>();
+
+	protected static final LockObject contentLock = new LockObject();
+
+	protected LinkedHashSet<Entity> contents = new LinkedHashSet<Entity>();
+	
+	public void setContents(LinkedHashSet<Entity> contents) {
+
+		synchronized (contentLock) {
+
+			this.contents = contents;
+
+		}
+
+	}
+
+	public LinkedHashSet<Entity> getContents() {
+
+		synchronized (contentLock) {
+
+			return contents;
+
+		}
+
+	}
+
+	public void addEntity(Entity entity) {
+
+		synchronized (contentLock) {
+
+			contents.add(entity);
+
+		}
+
+	}
+
+	public void removeEntity(Entity entity) {
+
+		synchronized (contentLock) {
+
+			contents.remove(entity);
+
+		}
+
+	}
+
+	public LinkedHashSet<Mobile> getMobiles() {
+
+		synchronized (mobileLock) {
+
+			return mobiles;
+
+		}
+
+	}
+	
+	public void addMobile(Mobile mobile) {
+
+		synchronized (mobileLock) {
+
+			mobiles.add(mobile);
+
+		}
+
+	}
+
+	public void removeMobile(Mobile mobile) {
+
+		synchronized (mobileLock) {
+
+			mobiles.remove(mobile);
+
+		}
+
+	}
+	
+	public String getAreaDesc() {
+		
+		return areaDesc;
+		
+	}
+	
+	public void setAreaDesc(String areaDesc) {
+		
+		this.areaDesc = areaDesc;
+		
+	}
 	
 	public Area() {
 		
@@ -30,16 +127,21 @@ public class Area extends Zone {
 	
 	public void newRoom() {
 		
-		Room room = new Room(this, null);
+		Room room = new Room();
 		
-		rooms.add(room);
+		if (rooms.size() == 0) {
 		
-		if (rooms.size() == 1) {
-			
+			rooms.add(room);
 			origin = room;
 			origin.coors = new Coordinates(0, 0);
+		
+		} else {
+			
+			rooms.add(room);
 			
 		}
+		
+		room.setArea(this);
 		
 	}
 	
@@ -50,6 +152,8 @@ public class Area extends Zone {
 		Coordinates newCoors = new Coordinates(start.getCoordinates(), dir.getOffset());
 		
 		Room room = new Room(this, newCoors);
+		
+		room.setArea(this);
 		
 		rooms.add(room);
 		
@@ -109,13 +213,19 @@ public class Area extends Zone {
 		
 	}
 	
+	public void setOrigin(Room origin) {
+		
+		this.origin = origin;
+		
+	}
+	
 	public Room getOrigin() {
 		
 		return origin;
 		
 	}
 	
-	public Room getLocation(Coordinates coors) {
+	public Room getRoom(Coordinates coors) {
 		
 		for (Room room : rooms) {
 			
@@ -141,7 +251,7 @@ public class Area extends Zone {
 		
 		StringBuilder sb = new StringBuilder();
 		
-		Room location = (Room)mobile.getLocation();
+		Room location = mobile.getRoom();
 		
 		ConnectNode cn = mobile.getConnectNode();
 		
@@ -158,7 +268,7 @@ public class Area extends Zone {
 				
 				Coordinates targetcoors = new Coordinates(center.getX() + i, center.getY() - j, center.getZ());
 				
-				Room targetroom = (Room)getLocation(targetcoors);
+				Room targetroom = getRoom(targetcoors);
 				
 				int mapX = radius*2 + i*2;
 				int mapY = radius*2 + j*2;
@@ -248,14 +358,22 @@ public class Area extends Zone {
 		
 	}
 	
-	public Location getDestination(Mobile mobile, Direction moveDir) {
+	public Room getDestination(Mobile mobile, Direction moveDir) {
 		
-		Room start = getLocation(mobile.getCoordinates());
+		Room start = getRoom(mobile.getCoordinates());
 		
 		Exit test = start.getExit(moveDir);
 		
 		return test.getDestination();
 		
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 	
 }

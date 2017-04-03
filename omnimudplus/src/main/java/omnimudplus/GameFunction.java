@@ -11,31 +11,27 @@ public class GameFunction {
 	
 	public static void autoMove(Direction moveDir, Mobile mobile) {
 		
-		Location location = mobile.getLocation();
+		Room room = mobile.getRoom();
 		
-		Zone zone = mobile.getZone();
+		Area area = mobile.getArea();
 		
 		ConnectNode cn = mobile.getConnectNode();
 		
-		Location destination = null;
-
-		if (location instanceof Room) {
+		Room destination = null;
 			
-			Exit exit = ((Room)location).getExit(moveDir);
+		Exit exit = room.getExit(moveDir);
 			
-			if (exit != null) {
+		if (exit != null) {
 			
-				destination = ((Room)location).getExit(moveDir).getDestination();
+			destination = room.getExit(moveDir).getDestination();
 			
-			}
-		
 		}
 		
 		if (destination != null) {
 				
-			Location prior = mobile.getLocation();
+			Room prior = mobile.getRoom();
 			
-			mobile.setLocation(destination);
+			mobile.setRoom(destination);
 					
 			Vector coors = new Vector(prior.getCoordinates(), destination.getCoordinates());
 			
@@ -43,13 +39,13 @@ public class GameFunction {
 			
 			if (prior instanceof Room) {
 				
-				locationMsg(prior, mobile.getName() + " leaves to the " + moveDir.getName() + ".", cn);
+				roomMsg(prior, mobile.getName() + " leaves to the " + moveDir.getName() + ".", cn);
 				
 			}
 				
 			if (destination instanceof Room) {
 				
-				locationMsg(destination, mobile.getName() + " arrives from the " + moveDir.getOpposite() + ".", cn);
+				roomMsg(destination, mobile.getName() + " arrives from the " + moveDir.getOpposite() + ".", cn);
 				
 				if (!mobile.isTraveling()) {
 				
@@ -135,13 +131,13 @@ public class GameFunction {
 			
 			}
 		
-			Zone zone = mobile.getZone();
+			Area area = mobile.getArea();
 			
-			Location location = mobile.getLocation();
+			Room room = mobile.getRoom();
 
 			List<Entity> objects = new ArrayList<Entity>();
 			
-			for (Mobile other : zone.getMobiles()) {
+			for (Mobile other : area.getMobiles()) {
 				
 				if (other != mobile) {
 				
@@ -151,7 +147,7 @@ public class GameFunction {
 				
 			}
 
-			objects.addAll(location.getContents());
+			objects.addAll(room.getContents());
 
 			for (Entity object : objects) {
 
@@ -175,64 +171,48 @@ public class GameFunction {
 		
 	}
 	
-	public static void locationMsg(Location source, String msg) {
-
-		Zone zone = source.getZone();
-		
-		if (zone instanceof Area) {
+	public static void roomMsg(Room source, String msg) {
 			
-			Room temp = (Room)source;
-			
-			for (Mobile mobile : temp.getMobiles()) {
+		for (Mobile mobile : source.getMobiles()) {
 				
-				ConnectNode cn = mobile.getConnectNode();
+			ConnectNode cn = mobile.getConnectNode();
 				
-				if (cn == null) {
-					continue;
-				}
-				
-				cn.println("<white>" + msg);
-				
-				cn.putPrompt();
-				
+			if (cn == null) {
+				continue;
 			}
-			
+				
+			cn.println("<white>" + msg);
+				
+			cn.putPrompt();
+				
 		}
 
 	}
 
-	public static void locationMsg(Location source, String msg, ConnectNode exclude) {
-		
-		Zone zone = source.getZone();
-		
-		if (zone instanceof Area) {
+	public static void roomMsg(Room source, String msg, ConnectNode exclude) {
 			
-			Room temp = (Room)source;
-			
-			for (Mobile mobile : temp.getMobiles()) {
+		for (Mobile mobile : source.getMobiles()) {
 				
-				ConnectNode cn = mobile.getConnectNode();
+			ConnectNode cn = mobile.getConnectNode();
 				
-				if (cn == exclude || cn == null) {
-					continue;
-				}
-				
-				cn.println("<white>" + msg);
-				
-				cn.putPrompt();
-				
+			if (cn == exclude || cn == null) {
+				continue;
 			}
-			
+				
+			cn.println("<white>" + msg);
+				
+			cn.putPrompt();
+				
 		}
 
 	}
     
-    public static int getApproximateDistance(Mobile mobile, Location location) {
+    public static int getApproximateDistance(Mobile mobile, Room room) {
     	
     	Coordinates mobileCoors = mobile.getCoordinates();
-    	Coordinates locationCoors = location.getCoordinates();
+    	Coordinates roomCoors = room.getCoordinates();
     	
-    	Vector coorOffset = new Vector(mobileCoors, locationCoors);
+    	Vector coorOffset = new Vector(mobileCoors, roomCoors);
     	
     	int squaredDistance = coorOffset.getSquaredDistance();
     	
@@ -254,13 +234,13 @@ public class GameFunction {
     	
     }
     
-    public static Direction getAngleDirection(Mobile mobile, Location location) {
+    public static Direction getAngleDirection(Mobile mobile, Room room) {
     	
     	Coordinates mobileCoors = mobile.getCoordinates();
     	
-    	Coordinates locationCoors = location.getCoordinates();
+    	Coordinates roomCoors = room.getCoordinates();
     	
-    	Vector coorOffset = new Vector(mobileCoors, locationCoors);
+    	Vector coorOffset = new Vector(mobileCoors, roomCoors);
     	
     	int Xdist = coorOffset.getXoffset();
     	
@@ -435,11 +415,11 @@ public class GameFunction {
     	
     }
     
-    public static String getCompassString(Mobile mobile, Location location) {
+    public static String getCompassString(Mobile mobile, Room room) {
     	
     	Coordinates mobileCoors = mobile.getCoordinates();
     	
-    	Coordinates locationCoors = location.getCoordinates();
+    	Coordinates locationCoors = room.getCoordinates();
     	
     	Vector coorOffset = new Vector(mobileCoors, locationCoors);
     	
@@ -447,18 +427,18 @@ public class GameFunction {
     	
     }
  
-    public static ArrayList<Direction> findPath(Mobile mobile, Location destination) {
+    public static ArrayList<Direction> findPath(Mobile mobile, Room destination) {
     
     	PriorityQueue<PathfindingNode> openQueue = 
     			new PriorityQueue<PathfindingNode>(25, new PathfindingComparator());
     	
-    	HashSet<Location> closedSet =
-    			new HashSet<Location>();
+    	HashSet<Room> closedSet =
+    			new HashSet<Room>();
     	
     	//ArrayList<PathfindingNode> openList = new ArrayList<PathfindingNode>();
     	//ArrayList<PathfindingNode> closedList = new ArrayList<PathfindingNode>();
     	
-    	PathfindingNode originNode = new PathfindingNode(mobile.getLocation(), destination);
+    	PathfindingNode originNode = new PathfindingNode(mobile.getRoom(), destination);
     	
     	openQueue.add(originNode);
     	
@@ -474,13 +454,13 @@ public class GameFunction {
     		
     		// Add it to the closed set.
     		
-    		closedSet.add(q.getLocation());
+    		closedSet.add(q.getRoom());
     		
     		ArrayList<PathfindingNode> successors = q.getSuccessors();
     		
     		for (PathfindingNode successor : successors) {
     			
-    			if (successor.getLocation() == destination) {
+    			if (successor.getRoom() == destination) {
     				q = successor;
     				break;
     			}
@@ -489,7 +469,7 @@ public class GameFunction {
     			
     			for (PathfindingNode temp2 : openQueue) {
     				
-    				if (temp2.getLocation() == successor.getLocation() && temp2.getF() <= successor.getF()) {
+    				if (temp2.getRoom() == successor.getRoom() && temp2.getF() <= successor.getF()) {
     					flagpast = true;
     					break;
     				}
@@ -500,7 +480,7 @@ public class GameFunction {
     				continue;
     			} else {
     				
-    				if (closedSet.contains(successor.getLocation())) {
+    				if (closedSet.contains(successor.getRoom())) {
     					flagpast = true;
     				}
     				
@@ -518,7 +498,7 @@ public class GameFunction {
     			
     		}
     		
-    		if (q.getLocation() == destination) {
+    		if (q.getRoom() == destination) {
     			break;
     		}
     		

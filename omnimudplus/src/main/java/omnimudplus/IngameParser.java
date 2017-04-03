@@ -2,6 +2,7 @@ package omnimudplus;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Random;
 
 public class IngameParser {
@@ -49,7 +50,7 @@ public class IngameParser {
 		case "findpath": findPath(fromIndex(command, 1), mobile); break;
 		case "stop": stop(mobile); break;
 		case "look": case "l": if (command.length <= 1) { look(mobile); } else { look(command, mobile); } break;
-		case "map": cn.print(mobile.getZone().getMapString(mobile, mobile.getPerception())); break;
+		case "map": cn.print(mobile.getArea().getMapString(mobile, 5)); break;
 		case "status": case "stat": status(cn); break;
 		case "quit": case "qq": quit(cn); break;
 		case "say": case "'": case "sing": say(command, mobile); break;
@@ -66,10 +67,12 @@ public class IngameParser {
 		case "who": who(cn); break;
 		case "colors": if (command.length > 1) { colors(fromIndex(command, 1), cn); } else { colors(cn); } break;
 		case "end": end(cn); break;
-		case "perceptionset": if (command.length > 1) { mobile.setPerception(Integer.parseInt(command[1])); } else { cn.println("Set perception to what?"); }; break;
 		case "newroom": if (command.length > 1) { newRoom(fromIndex(command, 1), mobile); } else { cn.println("Create a new room where?"); } break;
 		case "punch": if (command.length > 1) { attack(mobile, fromIndex(command, 1), Attack.PUNCH); } else { if (cn != null) { cn.println("Punch what?"); } } break;
 		case "fireball": if (command.length > 1) { attack(mobile, fromIndex(command, 1), Attack.FIREBALL); } else { if (cn != null) { cn.println("Cast fireball at what?"); } }; break;
+		case "enter": enter(mobile); break;
+		case "leave": leave(mobile); break;
+		case "area": System.out.println(mobile.getName() + ": " + mobile.getArea()); break;
 		default: invalid(cn); break;
 
 		}
@@ -134,7 +137,7 @@ public class IngameParser {
 			return;
 		}
 
-		cn.print(mobile.getLocation().printRoom(mobile));
+		cn.print(mobile.getRoom().printRoom(mobile));
 
 	}
 
@@ -142,7 +145,7 @@ public class IngameParser {
 
 		Mobile mobile = cn.getShell();
 		
-		GameFunction.locationMsg(mobile.getLocation(), mobile.getName() + " has disconnected.", cn);
+		GameFunction.roomMsg(mobile.getRoom(), mobile.getName() + " has disconnected.", cn);
 
 		cn.println("You have disconnected.");
 		
@@ -260,13 +263,9 @@ public class IngameParser {
 
 			LinkedHashSet<Mobile> mobiles = null;
 			
-			Location location = mobile.getLocation();
-			
-			if (location instanceof Room) {
-				
-				mobiles = ((Room)location).getMobiles();
-				
-			}
+			Room room = mobile.getRoom();
+
+			mobiles = room.getMobiles();
 			
 			StringBuilder builder = new StringBuilder();
 
@@ -397,16 +396,6 @@ public class IngameParser {
 	}
 	
 	public static void status (ConnectNode cn) {
-		
-		cn.println("Strength     : " + cn.getShell().getStrength());
-		
-		cn.println("Dexterity    : " + cn.getShell().getDexterity());
-		
-		cn.println("Constitution : " + cn.getShell().getConstitution());
-		
-		cn.println("Willpower    : " + cn.getShell().getWillpower());
-		
-		cn.println("Perception   : " + cn.getShell().getPerception());
 		
 		int maxWeight = cn.getShell().getMaxWeight();
 		
@@ -564,9 +553,9 @@ public class IngameParser {
 				
 				}
 				
-				GameFunction.locationMsg(mobile.getLocation(), mobile.getName() + " picks up " + reference.getShortDesc() + ".", cn);
+				GameFunction.roomMsg(mobile.getRoom(), mobile.getName() + " picks up " + reference.getShortDesc() + ".", cn);
 			
-				mobile.getLocation().removeEntity(reference);
+				mobile.getRoom().removeEntity(reference);
 			
 				mobile.addEntity(reference);
 			
@@ -588,7 +577,7 @@ public class IngameParser {
 				
 				}
 				
-				GameFunction.locationMsg(mobile.getLocation(), mobile.getName() + " removes " + reference.getShortDesc() + " from " + container.getShortDesc() + ".", cn);
+				GameFunction.roomMsg(mobile.getRoom(), mobile.getName() + " removes " + reference.getShortDesc() + " from " + container.getShortDesc() + ".", cn);
 				
 				container.removeEntity(reference);
 				
@@ -634,13 +623,13 @@ public class IngameParser {
 			
 			}
 			
-			Location location = mobile.getLocation();
+			Room room = mobile.getRoom();
 			
-			GameFunction.locationMsg(location, mobile.getShortDesc() + " drops " + reference.getShortDesc() + ".", cn);
+			GameFunction.roomMsg(room, mobile.getShortDesc() + " drops " + reference.getShortDesc() + ".", cn);
 			
-			location.addEntity(reference);
+			room.addEntity(reference);
 			
-			location.removeEntity(reference);
+			room.removeEntity(reference);
 			
 		}
 		
@@ -794,7 +783,7 @@ public class IngameParser {
 			
 			}
 			
-			GameFunction.locationMsg(mobile.getLocation(), mobile.getShortDesc() + " puts " + object.getShortDesc() + " into " + container2.getShortDesc() + ".", cn);
+			GameFunction.roomMsg(mobile.getRoom(), mobile.getShortDesc() + " puts " + object.getShortDesc() + " into " + container2.getShortDesc() + ".", cn);
 			mobile.removeEntity(object);
 			container2.addEntity(object);
 
@@ -830,15 +819,15 @@ public class IngameParser {
 		
 		Coordinates coors = new Coordinates(Xcoor, Ycoor);
 		
-		Location destination = mobile.getZone().getLocation(coors);
+		Room destination = mobile.getArea().getRoom(coors);
 		
 		if (destination != null) {
 			
-			GameFunction.locationMsg(mobile.getLocation(), mobile.getName() + " leaves to the ether.", cn);
+			GameFunction.roomMsg(mobile.getRoom(), mobile.getName() + " leaves to the ether.", cn);
 
-			mobile.setLocation(destination);
+			mobile.setRoom(destination);
 
-			GameFunction.locationMsg(mobile.getLocation(), mobile.getName() + " arrives from the ether.", cn);
+			GameFunction.roomMsg(mobile.getRoom(), mobile.getName() + " arrives from the ether.", cn);
 
 			look(mobile);
 			
@@ -847,6 +836,92 @@ public class IngameParser {
 			cn.println("Invalid destination specified.");
 			
 		}
+		
+	}
+	
+	public static void enter(Mobile mobile) {
+		
+		ConnectNode cn = mobile.getConnectNode();
+		
+		if (!mobile.hasMoveBalance()) {
+			
+			cn.println("You can't move that quickly.");
+			return;
+			
+		}
+		
+		Room room = mobile.getRoom();
+			
+		Building building = room.getBuilding();
+			
+		if (building == null) {
+				
+			cn.println("You don't see a building here.");
+				
+		} else {
+				
+			cn.println("You enter " + building.getShortDesc() + ".");
+			
+			mobile.setRoom(building.getOrigin());
+				
+			mobile.takeMoveBalance(mobile.getMoveSpeed(), false);
+			
+			cn.print(mobile.getRoom().printRoom(mobile));
+				
+		}
+		
+	}
+	
+	public static void leave(Mobile mobile) {
+		
+		ConnectNode cn = mobile.getConnectNode();
+		
+		if (!mobile.hasMoveBalance()) {
+			
+			cn.println("You can't move that quickly.");
+			return;
+			
+		}
+		
+		Room room = mobile.getRoom();
+		
+		Area area = mobile.getArea();
+		
+		if (area == null) {
+			
+			cn.println("You can't leave from this point.");
+			return;
+			
+		}
+		
+		if (area instanceof BuildingArea) {
+		
+			BuildingArea ba = (BuildingArea)area;
+			
+			if (room == area.getOrigin()) {
+				
+				Building building = ba.getBuilding();
+				
+				cn.println("You leave " + building.getShortDesc() + ".");
+				
+				mobile.setRoom(building.getParentRoom());
+				
+				mobile.takeMoveBalance(mobile.getMoveSpeed(), false);
+				
+				cn.print(mobile.getRoom().printRoom(mobile));
+				
+				return;
+				
+			}
+			
+		} else {
+			
+			cn.println("You're not inside a building.");
+			return;
+			
+		}
+		
+		cn.println("You can't leave from this point.");
 		
 	}
     
@@ -924,14 +999,7 @@ public class IngameParser {
     	
     	ConnectNode cn = mobile.getConnectNode();
     	
-    	if (!(mobile.getLocation() instanceof Room)) {
-    		
-    		cn.println("You're not standing in a room.");
-    		return;
-    		
-    	}
-    	
-    	Room cast = (Room)mobile.getLocation();
+    	Room room = mobile.getRoom();
     	
     	String check = command[0].toLowerCase();
     	
@@ -939,29 +1007,22 @@ public class IngameParser {
     		
     		if (check.equals(dir.getName()) || check.equals(dir.getShortName())) {
     			
-    			Area area = cast.getZone();
+    			Area area = room.getArea();
     			
-    			Exit temp = cast.getExit(dir);
+    			Building building = room.getBuilding();
     			
-    			Location dest = area.getLocation(new Coordinates(mobile.getCoordinates(), dir.getOffset()));
+    			Exit exit = room.getExit(dir);
     			
-    			if (temp != null) {
+    			Room destination = area.getRoom(new Coordinates(mobile.getCoordinates(), dir.getOffset()));
+    			
+    			if (destination != null) {
     				
-    				if (temp.getDestination() instanceof Room) {
-    				
-    					cn.println("Existing room to the " + dir.getName() + ".");
-    					return;
-    				
-    				}
-    				
-    			} else if (dest != null) {
-    				
-					cn.println("Existing room to the " + dir.getName() + ".");
-					return;
+    				cn.println("Existing room to the " + dir.getName() + ".");
+    				return;
     				
     			}
     					
-    			area.newRoom(cast, dir);
+    			area.newRoom(room, dir);
     			cn.println("New room created to the " + dir.getName() + ".");
     			return;
     			
@@ -982,16 +1043,16 @@ public class IngameParser {
     	
     	Coordinates coors = new Coordinates(Xcoor, Ycoor);
     	
-    	Location test = mobile.getZone().getLocation(coors);
+    	Room room = mobile.getArea().getRoom(coors);
     	
-    	if (test == null) {
+    	if (room == null) {
     		
     		cn.println("No path found.");
     		return;
     		
     	}
     	
-    	ArrayList<Direction> path = GameFunction.findPath(mobile, test);
+    	ArrayList<Direction> path = GameFunction.findPath(mobile, room);
     	
     	if (path == null) {
     		

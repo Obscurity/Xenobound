@@ -43,7 +43,7 @@ public class AccountParser {
 				
 			} else {
 				
-				shell.setLocation(Omnimud.areatest.getOrigin());
+				shell.setRoom(Omnimud.areatest.getOrigin());
 				
 				cn.setShell(shell);
 				
@@ -74,8 +74,7 @@ public class AccountParser {
 		
 			characters.add(new Mobile(null, account.getName(), aliases, 
 				account.getName(), account.getName() + " stands here.",
-				"Not much to say.", '@', 1, Material.UNDEFINED,
-				1, 1, 1, 1, 1));
+				"Not much to say.", 1, Material.UNDEFINED));
 		
 			AccountService.storeAccount(account);
 			

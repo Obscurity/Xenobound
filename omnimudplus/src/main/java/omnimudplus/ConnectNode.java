@@ -19,7 +19,7 @@ public class ConnectNode {
 		this.shell = shell;
 		this.client = client;
 		
-		shell.setLocation(null);
+		shell.setRoom(null);
 		
 	}
 	
@@ -29,13 +29,13 @@ public class ConnectNode {
 		
 	}
 	
-	public ConnectNode(Mobile shell, SocketChannel client, Location location) {
+	public ConnectNode(Mobile shell, SocketChannel client, Room room) {
 		
 		this.shell = shell;
 		this.client = client;
 		
-		shell.setLocation(location);
-		shell.setZone(location.getZone());
+		shell.setRoom(room);
+		shell.setArea(room.getArea());
 		
 	}
 	
@@ -142,9 +142,9 @@ public class ConnectNode {
 			
 			commands.append("h ");
 			
-			commands.append(ColorSpectrum.POWERSPECTRUM.getPromptHue(shell.getPower(), shell.getMaxPower()));
+			commands.append(ColorSpectrum.POWERSPECTRUM.getPromptHue(shell.getNrs(), shell.getMaxNrs()));
 			
-			commands.append(shell.getPower());
+			commands.append(shell.getNrs());
 			
 			commands.append(colorscheme.getForeground());
 			
@@ -152,9 +152,9 @@ public class ConnectNode {
 			
 			commands.append(ColorSpectrum.POWERSPECTRUM.getMax());
 			
-			commands.append(shell.getMaxPower());
+			commands.append(shell.getMaxNrs());
 			
-			commands.append("p");
+			commands.append("n");
 			
 			commands.append(colorscheme.getForeground());
 			
@@ -304,6 +304,8 @@ public class ConnectNode {
 	
 	public void cleanup() {
 		
+		System.out.println("Cleaning up " + account.getName() + " : " + shell.getName());
+		
 		try {
 		
 			AccountService.storeAccount(account);
@@ -314,9 +316,9 @@ public class ConnectNode {
 		
 		if (connState == ConnectionState.IN_GAME) {
 		
-			if (shell.getLocation() != null) {
+			if (shell.getRoom() != null) {
 				
-				shell.setLocation(null);
+				shell.setRoom(null);
 				
 			}
 			
@@ -338,7 +340,7 @@ public class ConnectNode {
 				
 			}
 			
-			shell.setZone(null);
+			shell.setArea(null);
 			
 			synchronized (Omnimud.playerlock) {
 				

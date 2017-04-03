@@ -1,0 +1,10 @@
+package omnimudplus;
+
+import java.io.Serializable;
+import java.util.LinkedHashSet;
+
+public abstract class Zone implements Serializable {
+	
+
+
+}

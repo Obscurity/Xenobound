@@ -137,6 +137,12 @@ public class Omnimud {
             
             System.out.println("Test area generated, with surrounding rooms.");
             
+            Building testbuilding = new Building();
+            
+            origin.setBuilding(testbuilding);
+            
+            testbuilding.setArea(origin.getArea());
+            
             Physics.populateRadialMap();
             
             System.out.println("Radial map populated.");

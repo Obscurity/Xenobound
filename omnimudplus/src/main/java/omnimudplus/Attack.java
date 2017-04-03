@@ -52,23 +52,15 @@ public enum Attack {
 	
 	private String thirdPersonReflexive;
 	
-	private final LockObject actionTimeLock = new LockObject();
+	private final LockObject attackLock = new LockObject();
 	
 	private int actionTime;
 	
-	private final LockObject rangeLock = new LockObject();
-	
 	private int range;
-	
-	private final LockObject damageTypeLock = new LockObject();
 	
 	private EffectType damageType;
 	
-	private final LockObject powerCostLock = new LockObject();
-	
-	private int powerCost;
-	
-	private final LockObject damageRollLock = new LockObject();
+	private int nrsCost;
 	
 	private int damage;
 	
@@ -77,7 +69,7 @@ public enum Attack {
 	private Attack(String name, String firstPersonMessage, String secondPersonMessage,
 			String thirdPersonSingularMessage, String thirdPersonPluralMessage,
 			String firstPersonReflexive, String thirdPersonReflexive,
-			int actionTime, int range, EffectType damageType, int powerCost,
+			int actionTime, int range, EffectType damageType, int nrsCost,
 			int damage, int variance) {
 		
 		this.name = name;
@@ -90,7 +82,7 @@ public enum Attack {
 		this.actionTime = actionTime;
 		this.range = range;
 		this.damageType = damageType;
-		this.powerCost = powerCost;
+		this.nrsCost = nrsCost;
 		this.damage = damage;
 		this.variance = variance;
 		
@@ -108,7 +100,7 @@ public enum Attack {
 	
 	public int getActionTime() {
 		
-		synchronized (actionTimeLock) {
+		synchronized (attackLock) {
 			
 			return actionTime;
 			
@@ -118,7 +110,7 @@ public enum Attack {
 	
 	public int getRange() {
 		
-		synchronized (rangeLock) {
+		synchronized (attackLock) {
 			
 			return range;
 			
@@ -126,11 +118,11 @@ public enum Attack {
 		
 	}
 	
-	public int getPowerCost() {
+	public int getNrsCost() {
 		
-		synchronized (powerCostLock) {
+		synchronized (attackLock) {
 			
-			return powerCost;
+			return nrsCost;
 			
 		}
 		
@@ -138,7 +130,7 @@ public enum Attack {
 	
 	public EffectType getEffectType() {
 		
-		synchronized (damageTypeLock) {
+		synchronized (attackLock) {
 		
 			return damageType;
 		
@@ -148,7 +140,7 @@ public enum Attack {
 	
 	public int getDamage() {
 		
-		synchronized(damageRollLock) {
+		synchronized(attackLock) {
 			
 			return damage;
 			
@@ -158,7 +150,7 @@ public enum Attack {
 	
 	public int getVariance() {
 		
-		synchronized(damageRollLock) {
+		synchronized(attackLock) {
 			
 			return variance;
 			
@@ -225,9 +217,9 @@ public enum Attack {
 		
 		Random rand = new Random();
 		
-		Zone zone = mobile.getZone();
+		Area area = mobile.getArea();
 		
-		int tryrange = GameFunction.getApproximateDistance(mobile, target.getLocation());
+		int tryrange = GameFunction.getApproximateDistance(mobile, target.getRoom());
 		
 		if (tryrange > range) {
 			
@@ -243,11 +235,11 @@ public enum Attack {
 		
 		cn.getShell().takeActionBalance(cn, getActionTime(), true);
 		
-		cn.getShell().spendPower(getPowerCost());
+		cn.getShell().spendNrs(getNrsCost());
 		
 		target.takeDamage(damage + rand.nextInt(getVariance()));
 		
-		for (Mobile other : mobile.getLocation().getMobiles()) {
+		for (Mobile other : mobile.getRoom().getMobiles()) {
 			
 			ConnectNode witness = other.getConnectNode();
 			

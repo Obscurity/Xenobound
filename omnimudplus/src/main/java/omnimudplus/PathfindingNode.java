@@ -5,8 +5,8 @@ import java.util.ArrayList;
 public class PathfindingNode {
 	
 	private PathfindingNode parent;
-	private Location location;
-	private Location destination;
+	private Room room;
+	private Room destination;
 	private Coordinates coordinates;
 	private Vector offset;
 	private Direction priorDir;
@@ -19,13 +19,13 @@ public class PathfindingNode {
 	
 	// Parent constructor.
 	
-	public PathfindingNode(Location location, Location destination) {
+	public PathfindingNode(Room room, Room destination) {
 		
 		this.parent = null;
-		this.location = location;
+		this.room = room;
 		this.destination = destination;
 		this.priorDir = null;
-		this.coordinates = location.getCoordinates();
+		this.coordinates = room.getCoordinates();
 		
 		this.offset = new Vector(coordinates, destination.getCoordinates());
 		
@@ -40,13 +40,13 @@ public class PathfindingNode {
 	
 	// Children constructor.
 	
-	public PathfindingNode(PathfindingNode parent, Location location, Direction dir) {
+	public PathfindingNode(PathfindingNode parent, Room room, Direction dir) {
 		
 		this.parent = parent;
-		this.location = location;
-		this.destination = parent.getDestination();
+		this.room = room;
+		this.destination = parent.getRoom();
 		this.priorDir = dir;
-		this.coordinates = location.getCoordinates();
+		this.coordinates = room.getCoordinates();
 		
 		this.offset = new Vector(coordinates, destination.getCoordinates());
 		
@@ -71,17 +71,13 @@ public class PathfindingNode {
 		
 		for (Direction dir : Direction.values()) {
 			
-			Location test = null;
-			
-			if (location instanceof Room) {
+			Room test = null;
 				
-				Exit temp = ((Room)location).getExit(dir);
+			Exit temp = room.getExit(dir);
 				
-				if (temp != null) {
+			if (temp != null) {
 				
-					test = ((Room)location).getExit(dir).getDestination();
-				
-				}
+				test = room.getExit(dir).getDestination();
 				
 			}
 			
@@ -99,13 +95,13 @@ public class PathfindingNode {
 		
 	}
 	
-	public Location getLocation() {
+	public Room getRoom() {
 		
-		return location;
+		return room;
 		
 	}
 	
-	public Location getDestination() {
+	public Room getDestination() {
 		
 		return destination;
 		

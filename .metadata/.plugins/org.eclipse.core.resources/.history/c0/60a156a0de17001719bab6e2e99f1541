@@ -1,0 +1,37 @@
+package omnimudplus;
+
+import java.util.LinkedList;
+
+public class Building extends Feature {
+	
+	// Buildings are features that can be entered.
+	
+	static final private long serialVersionUID = 1L;
+	
+	private LinkedList<Room> rooms = new LinkedList<Room>();
+	
+	private Room origin;
+
+	public LinkedList<Room> getRooms() {
+		return rooms;
+	}
+
+	public void setRooms(LinkedList<Room> rooms) {
+		this.rooms = rooms;
+	}
+
+	public Room getOrigin() {
+		return origin;
+	}
+
+	public void setOrigin(Room origin) {
+		this.origin = origin;
+	}
+	
+	public Building() {
+		
+		super()
+		
+	}
+
+}

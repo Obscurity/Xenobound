@@ -1,16 +1,19 @@
 package omnimudplus;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
-public class Room extends Location {
-	
+public class Room implements Serializable {
+
 	private String briefDesc;
 	
 	private String verboseDesc;
 	
 	private Area area;
+	
+	private Building building;
 
 	private static final LockObject exitLock = new LockObject();
 	
@@ -20,7 +23,89 @@ public class Room extends Location {
 	
 	private LinkedHashSet<Mobile> mobiles = new LinkedHashSet<Mobile>();
 	
-	static final private long serialVersionUID = 23L;
+	private Feature feature;
+	
+	static final private long serialVersionUID = 29L;
+	
+	protected Coordinates coors;
+	
+	protected final LockObject terrainLock = new LockObject();
+	
+	protected Terrain terrain;
+	
+	protected final LockObject contentLock = new LockObject();
+	
+	protected LinkedList<Entity> contents = new LinkedList<Entity>();
+	
+	public Coordinates getCoordinates() {
+		
+		return coors;
+		
+	}
+	
+	public void setContents(LinkedList<Entity> contents) {
+
+		synchronized (contentLock) {
+
+			this.contents = contents;
+
+		}
+
+	}
+
+	public LinkedList<Entity> getContents() {
+
+		synchronized (contentLock) {
+
+			return contents;
+
+		}
+
+	}
+
+	public void addEntity(Entity entity) {
+
+		synchronized (contentLock) {
+
+			contents.add(entity);
+
+		}
+
+	}
+
+	public void removeEntity(Entity entity) {
+
+		synchronized (contentLock) {
+
+			contents.remove(entity);
+
+		}
+
+	}
+	
+	public void setTerrain(Terrain terrain) {
+		
+		this.terrain = terrain;
+		
+	}
+	
+	public Terrain getTerrain() {
+		
+		return terrain;
+		
+	}
+	
+	public boolean containsEntity(Entity entity) {
+		
+		if (contents.contains(entity)) {
+			
+			return true;
+			
+		}
+		
+		return false;
+		
+	}
 	
 	public Room() {
 		
@@ -45,6 +130,24 @@ public class Room extends Location {
 		setTerrain(Terrain.UNINITIALIZED);
 		
 		this.area = area;
+		
+	}
+	
+	public Room(Building building, Coordinates coors) {
+		
+		briefDesc = "An uninitialized room";
+		
+		verboseDesc = "This room has not been initialized.";
+		
+		this.coors = coors;
+		
+		setTerrain(Terrain.UNINITIALIZED);
+		
+		if (building.getParentRoom() != null) {
+		
+			this.area = building.getParentRoom().getArea();
+		
+		}
 		
 	}
 	
@@ -76,7 +179,7 @@ public class Room extends Location {
 		
 	}
 	
-	public void setExit(Direction dir, Location location) {
+	public void setExit(Direction dir, Room room) {
 		
 		synchronized (exitLock) {
 		
@@ -84,8 +187,8 @@ public class Room extends Location {
 				exits.remove(dir);
 			}
 			
-			if (location != null) {
-				exits.put(dir, new Exit(location));
+			if (room != null) {
+				exits.put(dir, new Exit(room));
 			}
 			
 		}
@@ -102,7 +205,7 @@ public class Room extends Location {
 		
 	}
 	
-	public Location getDestination(Direction dir) {
+	public Room getDestination(Direction dir) {
 		
 		synchronized (exitLock) {
 			
@@ -174,7 +277,25 @@ public class Room extends Location {
 		
 	}
 	
-	public Area getZone() {
+	public void setArea(Area area) {
+		
+		if (this.area != null) {
+			
+			this.area.removeRoom(this);
+			
+		}
+		
+		this.area = area;
+		
+		if (area != null) {
+		
+			area.addRoom(this);
+		
+		}
+		
+	}
+	
+	public Area getArea() {
 		
 		return area;
 		
@@ -235,6 +356,32 @@ public class Room extends Location {
 
 			}
 
+		}
+		
+		if (building != null) {
+			
+			sumdesc.append(building.getRoomDesc());
+			sumdesc.append("\n\n");
+			
+		} else {
+			
+			if (area != null) {
+			
+				if (area instanceof BuildingArea) {
+					
+					if (area.getOrigin() == this) {
+						
+						BuildingArea ba = (BuildingArea)area;
+						
+						sumdesc.append("You can leave " + ba.getBuilding().getShortDesc() + " from here.");
+						sumdesc.append("\n\n");
+						
+					}
+					
+				}
+			
+			}
+			
 		}
 		
 		sumdesc.append(cn.getColorScheme().getExits());
@@ -298,6 +445,25 @@ public class Room extends Location {
 		
 		return builder.toString();
 		
+	}
+
+	public Feature getFeature() {
+		return feature;
+	}
+
+	public void setFeature(Feature feature) {
+		this.feature = feature;
+	}
+
+	public Building getBuilding() {
+		return building;
+	}
+
+	public void setBuilding(Building building) {
+		// System.out.println(building);
+		this.building = building;
+		building.setParentRoom(this);
+		building.setArea(this.area);
 	}
 	
 }

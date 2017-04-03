@@ -1,0 +1,15 @@
+package omnimudplus;
+
+import java.io.Serializable;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+
+public abstract class Location implements Serializable {
+	
+	public abstract boolean containsMobile();
+	
+	public abstract Zone getZone();
+	
+	public abstract String printRoom(Mobile mobile);
+
+}

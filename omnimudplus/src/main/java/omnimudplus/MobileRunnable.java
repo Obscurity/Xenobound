@@ -26,9 +26,9 @@ public class MobileRunnable implements Runnable {
 				
 			} else if (command.equals("powerRegen")) {
 				
-				if (mobile.hasPowerRegenBalance()) {
+				if (mobile.hasNrsRegenBalance()) {
 					
-					mobile.gainPower(1);
+					mobile.gainNrs(1);
 					
 				}
 				

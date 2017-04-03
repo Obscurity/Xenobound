@@ -3,35 +3,21 @@ import java.io.*;
 
 public class Entity implements Serializable {
 
-	protected final LockObject nameLock = new LockObject();
+	protected final LockObject descLock = new LockObject();
 
 	protected String name; /* The name of the entity. */
-	
-	protected final LockObject aliasLock = new LockObject();
 
 	protected String[] aliases; /* The aliases the entity can be referenced by. Cannot be left blank. */
-	
-	protected final LockObject shortDescLock = new LockObject();
 
 	protected String shortDesc; /* A short description of the entity - 'a short sword', 'a tall man' */
-	
-	protected final LockObject roomDescLock = new LockObject();
 
 	protected String roomDesc; /* As it appears in a room - 'A short sword lies here.', 'A tall man stands here.' */
-	
-	protected final LockObject longDescLock = new LockObject();
 
 	protected String longDesc; /* The description yielded upon closer examination. 'This short sword is sharp.', 'This man really is very tall.' */
-	
-	protected final LockObject tokenLock = new LockObject();
 
-	protected char token; /* The token the item displays as, if seen on a map interface. 't', '@' */
-
-	protected final LockObject weightLock = new LockObject();
+	protected final LockObject propertyLock = new LockObject();
 
 	protected int weight; /* Weight in grams. 0 is effectively weightless, or close to. */
-
-	protected final LockObject roomLock = new LockObject();
 	
 	protected Pronouns pronouns = Pronouns.IT;
 	
@@ -39,20 +25,11 @@ public class Entity implements Serializable {
 	
 	static final private long serialVersionUID = 1L;
 	
-	// Measured in meters per second (m/s). Physics runnables use them to determine position.
-	
-	/* These are used for temporary tracking, due to vertical distance being 
-	 * measured in 3-meter increments. It should never be higher than 3 or
-	 * lower than 0 - otherwise, we roll over into a new Z-level or resolve
-	 * falling damage. Likewise, we can trace overflow with X and Y. */
-	
 	protected Coordinates coors;
 	
-	protected final LockObject pronounsLock = new LockObject();
+	protected Room room = null;
 	
-	protected Location location = null;
-	
-	protected Zone zone = null;
+	protected Area area = null;
 
 	public Entity() {
 
@@ -66,15 +43,13 @@ public class Entity implements Serializable {
 
 		longDesc = "This entity is uninitialized, and this is probably an issue.";
 
-		token = '?';
-
 		weight = 1;
 		
 		material = Material.UNDEFINED;
 
 	}
 
-	public Entity(String name, String[] aliases, String shortDesc, String roomDesc, String longDesc, char token, int weight, Material material) {
+	public Entity(String name, String[] aliases, String shortDesc, String roomDesc, String longDesc, int weight, Material material) {
 
 		this.name = name;
 
@@ -86,8 +61,6 @@ public class Entity implements Serializable {
 
 		this.longDesc = longDesc;
 
-		this.token = new Character(token);
-
 		this.weight = weight;
 		
 		this.material = material;
@@ -96,7 +69,7 @@ public class Entity implements Serializable {
 
 	public String getName() {
 
-		synchronized (nameLock) {
+		synchronized (descLock) {
 			
 			return name;
 
@@ -106,7 +79,7 @@ public class Entity implements Serializable {
 
 	public void setName(String name) {
 
-		synchronized (nameLock) {
+		synchronized (descLock) {
 
 			this.name = name;
 
@@ -116,7 +89,7 @@ public class Entity implements Serializable {
 
 	public String[] getAliases() {
 
-		synchronized (aliasLock) {
+		synchronized (descLock) {
 
 			return aliases;
 
@@ -126,7 +99,7 @@ public class Entity implements Serializable {
 
 	public void setAliases(String[] aliases) {
 
-		synchronized (aliasLock) {
+		synchronized (descLock) {
 
 			this.aliases = aliases;
 
@@ -136,31 +109,27 @@ public class Entity implements Serializable {
 
 	public String[] getReferences() {
 
-		synchronized (nameLock) { 
+		synchronized (descLock) { 
 
-			synchronized (aliasLock) {
+			String[] references = new String[aliases.length + 1];
 
-				String[] references = new String[aliases.length + 1];
+			references[0] = this.name;
 
-				references[0] = this.name;
+			for (int i = 1; i < references.length; i++) {
 
-				for (int i = 1; i < references.length; i++) {
-
-					references[i] = aliases[i - 1];
-
-				}
-
-				return references;
+				references[i] = aliases[i - 1];
 
 			}
 
+			return references;
+			
 		}
 
 	}
 
 	public String getShortDesc() {
 
-		synchronized (shortDescLock) {
+		synchronized (descLock) {
 
 			return shortDesc;
 
@@ -170,7 +139,7 @@ public class Entity implements Serializable {
 
 	public void setShortDesc(String shortDesc) {
 
-		synchronized (shortDescLock) {
+		synchronized (descLock) {
 
 			this.shortDesc = shortDesc;
 
@@ -180,7 +149,7 @@ public class Entity implements Serializable {
 
 	public String getLongDesc() {
 
-		synchronized (longDescLock) {
+		synchronized (descLock) {
 
 			return longDesc;
 
@@ -190,7 +159,7 @@ public class Entity implements Serializable {
 
 	public void setLongDesc(String longDesc) {
 
-		synchronized (longDescLock) {
+		synchronized (descLock) {
 
 			this.longDesc = longDesc;
 
@@ -200,7 +169,7 @@ public class Entity implements Serializable {
 
 	public String getRoomDesc() {
 
-		synchronized (roomDescLock) {
+		synchronized (descLock) {
 
 			return roomDesc;
 
@@ -210,7 +179,7 @@ public class Entity implements Serializable {
 
 	public void setRoomDesc(String roomDesc) {
 
-		synchronized (roomDescLock) {
+		synchronized (descLock) {
 
 			this.roomDesc = roomDesc;
 
@@ -218,29 +187,9 @@ public class Entity implements Serializable {
 
 	}
 
-	public Character getToken() {
-
-		synchronized (tokenLock) {
-
-			return token;
-
-		}
-
-	}
-
-	public void setToken(Character token) {
-
-		synchronized (tokenLock) {
-
-			this.token = token;
-
-		}
-
-	}
-
 	public int getWeight() {
 
-		synchronized (weightLock) {
+		synchronized (propertyLock) {
 
 			return weight;
 
@@ -250,7 +199,7 @@ public class Entity implements Serializable {
 
 	public void setWeight(int weight) {
 
-		synchronized (weightLock) {
+		synchronized (propertyLock) {
 
 			this.weight = weight;
 
@@ -270,29 +219,29 @@ public class Entity implements Serializable {
 		
 	}
 	
-	public void setLocation(Location location) {
+	public void setRoom(Room room) {
 		
-		if (this.location != null) {
+		if (this.room != null) {
 			
-			this.location.removeEntity(this);
+			this.room.removeEntity(this);
 			
 		}
 		
-		this.location = location;
+		this.room = room;
 		
-		if (this.location != null) {
+		if (this.room != null) {
 			
-			this.location.addEntity(this);
+			this.room.addEntity(this);
 			
 		}
 		
 	}
 	
-	public LockObject getPronounsLock() {
+	public LockObject getPropertyLock() {
 		
-		synchronized (pronounsLock) {
+		synchronized (propertyLock) {
 			
-			return pronounsLock;
+			return propertyLock;
 			
 		}
 		
@@ -304,31 +253,31 @@ public class Entity implements Serializable {
 		
 	}
 	
-	public Location getLocation() {
+	public Room getRoom() {
 		
-		return location;
-		
-	}
-	
-	public Zone getZone() {
-		
-		return zone;
+		return room;
 		
 	}
 	
-	public void setZone(Zone zone) {
+	public Area getArea() {
 		
-		if (this.zone != null) {
+		return area;
+		
+	}
+	
+	public void setArea(Area area) {
+		
+		if (this.area != null) {
 			
-			this.zone.removeEntity(this);
+			this.area.removeEntity(this);
 			
 		}
 		
-		this.zone = zone;
+		this.area = area;
 		
-		if (this.zone != null) {
+		if (this.area != null) {
 			
-			this.zone.addEntity(this);
+			this.area.addEntity(this);
 			
 		}
 		
@@ -336,7 +285,7 @@ public class Entity implements Serializable {
 
 	public String toString() {
 
-		return "name: " + name + "\naliases: " + aliases + "\nshortDesc: " + shortDesc + "\nroomDesc: " + roomDesc + "\nlongDesc: " + longDesc + "\ntoken: " + token;
+		return "name: " + name + "\naliases: " + aliases + "\nshortDesc: " + shortDesc + "\nroomDesc: " + roomDesc + "\nlongDesc: " + longDesc;
 
 	}
 

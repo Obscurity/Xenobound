@@ -106,17 +106,11 @@ public class TravelRunnable implements Runnable {
 					
 				} else {
 					
-					Zone zone = mobile.getZone();
+					Area area = mobile.getArea();
 					
-					Location test = null;
+					Room test = area.getRoom(coors);
 					
-					if (zone instanceof Area) {
-						
-						test = ((Area)zone).getLocation(coors);
-						
-					}
-					
-					if (mobile.getLocation() == test) {
+					if (mobile.getRoom() == test) {
 						
 						mobile.travelStop();
 						

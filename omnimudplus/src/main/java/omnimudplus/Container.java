@@ -24,7 +24,7 @@ public class Container extends Entity {
 	public Container() {
 
 		super("container", new String[] {"object, thing"}, "a container", "An uninitialized container is here.", "This " +
-				"container is uninitialized.", 'u', 1, Material.UNDEFINED);
+				"container is uninitialized.", 1, Material.UNDEFINED);
 
 		capacity = 5;
 
@@ -36,10 +36,10 @@ public class Container extends Entity {
 
 	}
 
-	public Container(String name, String[] aliases, String shortDesc, String roomDesc, String longDesc, char token, int weight, 
+	public Container(String name, String[] aliases, String shortDesc, String roomDesc, String longDesc, int weight, 
 			Material material, int capacity, int maxWeight, String[] types, LinkedHashSet<Entity> contents) {
 
-		super(name, aliases, shortDesc, roomDesc, longDesc, token, weight, material);
+		super(name, aliases, shortDesc, roomDesc, longDesc, weight, material);
 
 		this.capacity = capacity;
 
@@ -119,7 +119,7 @@ public class Container extends Entity {
 	
 	public void setWeight(Integer weight) {
 
-		synchronized (weightLock) {
+		synchronized (propertyLock) {
 
 			this.weight = weight;
 			
@@ -129,7 +129,7 @@ public class Container extends Entity {
 	
 	public int getWeight() {
 
-		synchronized (weightLock) {
+		synchronized (propertyLock) {
 
 			return weight + weightCarried;
 
@@ -139,7 +139,7 @@ public class Container extends Entity {
 	
 	public void setWeightCarried() {
 		
-		synchronized (weightLock) {
+		synchronized (propertyLock) {
 		
 			this.weightCarried = 0;
 			
@@ -155,7 +155,7 @@ public class Container extends Entity {
 	
 	public int getWeightCarried() {
 		
-		synchronized (weightLock) {
+		synchronized (propertyLock) {
 		
 			return weightCarried;
 		
@@ -165,7 +165,7 @@ public class Container extends Entity {
 	
 	public void setMaxWeight(int maxWeight) {
 		
-		synchronized (weightLock) {
+		synchronized (propertyLock) {
 			
 			this.maxWeight = maxWeight;
 			
@@ -175,7 +175,7 @@ public class Container extends Entity {
 	
 	public int getMaxWeight() {
 		
-		synchronized (weightLock) {
+		synchronized (propertyLock) {
 			
 			return maxWeight;
 			
