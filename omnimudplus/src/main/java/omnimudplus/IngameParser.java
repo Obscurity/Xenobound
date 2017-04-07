@@ -852,14 +852,16 @@ public class IngameParser {
 		
 		Room room = mobile.getRoom();
 			
-		Building building = room.getBuilding();
+		Feature feature = room.getFeature();
 			
-		if (building == null) {
+		if (feature == null) {
 				
 			cn.println("You don't see a building here.");
 				
-		} else {
-				
+		} else if (feature instanceof Building ) {
+			
+			Building building = (Building)feature;
+			
 			cn.println("You enter " + building.getShortDesc() + ".");
 			
 			mobile.setRoom(building.getOrigin());
@@ -1008,10 +1010,6 @@ public class IngameParser {
     		if (check.equals(dir.getName()) || check.equals(dir.getShortName())) {
     			
     			Area area = room.getArea();
-    			
-    			Building building = room.getBuilding();
-    			
-    			Exit exit = room.getExit(dir);
     			
     			Room destination = area.getRoom(new Coordinates(mobile.getCoordinates(), dir.getOffset()));
     			

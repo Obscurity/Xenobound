@@ -139,7 +139,7 @@ public class Omnimud {
             
             Building testbuilding = new Building();
             
-            origin.setBuilding(testbuilding);
+            origin.setFeature(testbuilding);
             
             testbuilding.setArea(origin.getArea());
             

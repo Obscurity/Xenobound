@@ -547,6 +547,48 @@ public class GameFunction {
     	
     }
     
+    public static String stringArrayToList(String[] a) {
+    	
+		StringBuilder builder = new StringBuilder();
+		
+		if (a.length == 0) {
+			
+			return "";
+			
+		} else if (a.length == 1) {
+			
+			return a[0];
+			
+		} else if (a.length == 2) {
+			
+			builder.append(a[0]);
+			builder.append(" and ");
+			builder.append(a[1]);
+			
+			return builder.toString();
+			
+		} else if (a.length > 2) {
+			
+			for (int i = 0; i < a.length - 1; i++) {
+				
+				builder.append(a[i]);
+				builder.append(", ");
+				
+			}
+			
+			builder.append("and ");
+			builder.append(a[a.length - 1]);
+			
+			return builder.toString();
+			
+		} else {
+			
+			return "Please report an error if you see this.";
+			
+		}
+    	
+    }
+    
     public static String titleSplash() {
     	
     	// TODO

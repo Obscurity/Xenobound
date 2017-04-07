@@ -12,8 +12,6 @@ public class Room implements Serializable {
 	private String verboseDesc;
 	
 	private Area area;
-	
-	private Building building;
 
 	private static final LockObject exitLock = new LockObject();
 	
@@ -358,9 +356,9 @@ public class Room implements Serializable {
 
 		}
 		
-		if (building != null) {
+		if (feature != null) {
 			
-			sumdesc.append(building.getRoomDesc());
+			sumdesc.append(feature.getRoomDesc());
 			sumdesc.append("\n\n");
 			
 		} else {
@@ -452,18 +450,10 @@ public class Room implements Serializable {
 	}
 
 	public void setFeature(Feature feature) {
-		this.feature = feature;
-	}
-
-	public Building getBuilding() {
-		return building;
-	}
-
-	public void setBuilding(Building building) {
 		// System.out.println(building);
-		this.building = building;
-		building.setParentRoom(this);
-		building.setArea(this.area);
+		this.feature = feature;
+		feature.setParentRoom(this);
+		feature.setArea(this.area);
 	}
 	
 }
