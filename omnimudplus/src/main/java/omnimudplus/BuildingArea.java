@@ -1,5 +1,7 @@
 package omnimudplus;
 
+import omnimudplus.Entities.Building;
+
 public class BuildingArea extends Area {
 
 	private Building building;

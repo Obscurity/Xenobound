@@ -7,6 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import omnimudplus.Entities.Entity;
+import omnimudplus.Entities.Mobile;
+
 public class GameFunction {
 	
 	public static void autoMove(Direction moveDir, Mobile mobile) {

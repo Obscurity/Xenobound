@@ -3,6 +3,8 @@ package omnimudplus;
 import java.nio.channels.NonWritableChannelException;
 import java.util.ArrayList;
 
+import omnimudplus.Entities.Mobile;
+
 public class TravelRunnable implements Runnable {
 	
 	private Mobile mobile = null;

@@ -2,6 +2,9 @@ package omnimudplus;
 
 import java.util.Random;
 
+import omnimudplus.Effects.EffectType;
+import omnimudplus.Entities.Mobile;
+
 public enum Attack {
 	
 	PUNCH("punch",

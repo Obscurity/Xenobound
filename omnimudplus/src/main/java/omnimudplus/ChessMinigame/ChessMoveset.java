@@ -2,11 +2,17 @@ package omnimudplus.ChessMinigame;
 
 public enum ChessMoveset {
 	
-	STRAIGHT,
-	DIAGONAL,
-	COMPASS_LONG,
-	COMPASS_SHORT,
-	JUMPING,
-	SOLDIER
+	// Rook-style.
+	ROOK,
+	// Bishop-style.
+	BISHOP,
+	// Queen-style.
+	QUEEN,
+	// King-style.
+	KING,
+	// Knight-style.
+	KNIGHT,
+	// Pawn-style.
+	PAWN
 
 }

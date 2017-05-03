@@ -3,6 +3,10 @@ package omnimudplus;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
+import omnimudplus.Effects.Effect;
+import omnimudplus.Entities.Entity;
+import omnimudplus.Entities.Mobile;
+
 public class Ability {
 	
 	private final LockObject messageLock = new LockObject();

@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.concurrent.ScheduledFuture;
 
+import omnimudplus.Entities.Mobile;
+
 public class ConnectNode {
 	
 	private ConnectionState connState           = ConnectionState.CONNECTED;

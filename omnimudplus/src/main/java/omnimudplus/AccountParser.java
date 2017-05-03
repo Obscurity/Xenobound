@@ -2,6 +2,8 @@ package omnimudplus;
 
 import java.util.LinkedHashSet;
 
+import omnimudplus.Entities.Mobile;
+
 public class AccountParser {
 	
 	public static void parse(String[] command, ConnectNode cn)

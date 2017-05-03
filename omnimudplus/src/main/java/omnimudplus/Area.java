@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
+import omnimudplus.Entities.Entity;
+import omnimudplus.Entities.Mobile;
+
 public class Area implements Serializable {
 	
 	protected String name;

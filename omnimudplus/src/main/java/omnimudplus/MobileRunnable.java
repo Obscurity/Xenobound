@@ -1,5 +1,7 @@
 package omnimudplus;
 
+import omnimudplus.Entities.Mobile;
+
 public class MobileRunnable implements Runnable {
 	
 	private Mobile mobile                = null;

@@ -5,6 +5,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
+import omnimudplus.Entities.Building;
+import omnimudplus.Entities.Entity;
+import omnimudplus.Entities.Feature;
+import omnimudplus.Entities.Mobile;
+
 public class Room implements Serializable {
 
 	private String briefDesc;

@@ -1,6 +1,8 @@
 package omnimudplus;
 import java.util.*;
 
+import omnimudplus.Entities.Entity;
+
 public class Container extends Entity {
 	
 	protected final LockObject capacityLock = new LockObject();

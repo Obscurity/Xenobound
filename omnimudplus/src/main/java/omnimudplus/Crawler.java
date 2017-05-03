@@ -9,6 +9,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
+import omnimudplus.Entities.Entity;
+import omnimudplus.Entities.Mobile;
+
 public class Crawler {
     public static boolean crawlRecursively(Field field, HashSet<Class<?>> alreadyCrawled, HashMap<Field, HashSet<String>> badFields) {
         if (alreadyCrawled.contains(field.getType())) {

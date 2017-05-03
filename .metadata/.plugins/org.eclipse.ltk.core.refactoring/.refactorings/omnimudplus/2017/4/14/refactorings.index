@@ -7,3 +7,15 @@
 1491340672763	Encapsulate field 'durability'
 1491537450492	Delete element
 1491537485705	Delete element
+1491615569056	Move compilation unit
+1491615578527	Move compilation unit
+1491615583879	Move compilation unit
+1491615598343	Move compilation unit
+1491615621761	Move compilation unit
+1491615627555	Move compilation unit
+1491615748992	Move compilation unit
+1491634407139	Move compilation unit
+1491634557039	Encapsulate field 'whitePlayer'
+1491634561499	Encapsulate field 'blackPlayer'
+1491634663731	Encapsulate field 'chessboard'
+1491634698628	Encapsulate field 'whiteTurn'
