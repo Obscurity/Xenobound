@@ -1,0 +1,5 @@
+package omnimudplus.ChessMinigame.ChessPieces;
+
+public class ChessBishop {
+
+}

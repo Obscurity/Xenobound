@@ -1,0 +1,9 @@
+package omnimudplus;
+
+import omnimudplus.Entities.Feature;
+
+public class Machine extends Feature {
+
+	private static final long serialVersionUID = 1L;
+
+}

@@ -1,0 +1,14 @@
+package omnimudplus.ChessMinigame;
+
+public class ChessQueen extends ChessPiece {
+
+	public ChessQueen(boolean isWhite) {
+		
+		this.setName("Queen");
+		this.setWhite(isWhite);
+		this.setMoveset(ChessMoveset.QUEEN);
+		this.setToken('Q');
+		
+	}
+	
+}

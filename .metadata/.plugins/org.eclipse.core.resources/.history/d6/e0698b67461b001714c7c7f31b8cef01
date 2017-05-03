@@ -1,0 +1,34 @@
+package omnimudplus;
+
+public class Unit extends Entity {
+	
+	private static final long serialVersionUID = 1L;
+	
+	public Unit() {
+		
+		super("unit", new String[] {"thing", "object"},
+				"an undefined unit",
+				"An undefined unit lies here.",
+				"This unit is undefined.",
+				0, Material.UNDEFINED);
+		
+	}
+	
+	public Unit(Material material) {
+		
+		super("unit", new String[] {"thing", "object", material.getName()},
+				"a unit of " + material.getName(),
+				"A unit of " + material.getName() + " lies here.",
+				"This is a singular unit of " + material.getName() +
+				". It has been neatly compartmentalized.",
+				0, material);
+		
+	}
+	
+	public Material getMaterial() {
+		
+		return material;
+		
+	}
+	
+}
