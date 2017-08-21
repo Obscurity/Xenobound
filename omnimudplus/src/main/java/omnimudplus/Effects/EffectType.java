@@ -11,8 +11,8 @@ public enum EffectType {
 	ELECTRIC,
 	ACID,
 	TOXIC,
-	LIGHT,
-	SHADOW,
+	MEDICAL,
+	NANOROBOTIC,
 	NONE;
 
 }

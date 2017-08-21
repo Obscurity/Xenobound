@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import omnimudplus.Geography.Vector;
+
 public class Physics {
 	
 	public static final double GRAVITY = 9.81;

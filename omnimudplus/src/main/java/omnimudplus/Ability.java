@@ -6,6 +6,8 @@ import java.util.LinkedHashSet;
 import omnimudplus.Effects.Effect;
 import omnimudplus.Entities.Entity;
 import omnimudplus.Entities.Mobile;
+import omnimudplus.Entities.Pronouns;
+import omnimudplus.Geography.Terrain;
 
 public class Ability {
 	
@@ -271,28 +273,28 @@ public class Ability {
 		
 		// Subject pronouns.
 		
-		tempstring = tempstring.replaceAll("<castersubj>", caster.getSubject());
-		tempstring = tempstring.replaceAll("<targetsubj>", target.getSubject());
+		tempstring = tempstring.replaceAll("<csubj>", caster.getSubject());
+		tempstring = tempstring.replaceAll("<tsubj>", target.getSubject());
 		
 		// Object pronouns.
 		
-		tempstring = tempstring.replaceAll("<casterobj>", caster.getObject());
-		tempstring = tempstring.replaceAll("<targetobj>", target.getObject());
+		tempstring = tempstring.replaceAll("<cobj>", caster.getObject());
+		tempstring = tempstring.replaceAll("<tobj>", target.getObject());
 		
 		// Possessive adjectives.
 		
-		tempstring = tempstring.replaceAll("<casterpossadj>", caster.getPossAdj());
-		tempstring = tempstring.replaceAll("<targetpossadj>", target.getPossAdj());
+		tempstring = tempstring.replaceAll("<cpadj>", caster.getPossAdj());
+		tempstring = tempstring.replaceAll("<tpadj>", target.getPossAdj());
 		
 		// Possessive pronouns.
 		
-		tempstring = tempstring.replaceAll("<casterposspro>", caster.getPossPro());
-		tempstring = tempstring.replaceAll("<targetposspro>", target.getPossPro());
+		tempstring = tempstring.replaceAll("<cppro>", caster.getPossPro());
+		tempstring = tempstring.replaceAll("<tppro>", target.getPossPro());
 		
 		// Reflexive pronouns.
 		
-		tempstring = tempstring.replaceAll("<casterreflexive>", caster.getReflexive());
-		tempstring = tempstring.replaceAll("<targetreflexive>", target.getReflexive());
+		tempstring = tempstring.replaceAll("<crefl>", caster.getReflexive());
+		tempstring = tempstring.replaceAll("<trefl>", target.getReflexive());
 		
 		return tempstring;
 		

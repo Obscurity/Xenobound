@@ -2,25 +2,38 @@ package omnimudplus;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 
+import omnimudplus.Account.Account;
+import omnimudplus.Entities.Container;
 import omnimudplus.Entities.Entity;
+import omnimudplus.Entities.IHoldsTakables;
 import omnimudplus.Entities.Mobile;
+import omnimudplus.Entities.Shell;
+import omnimudplus.Entities.TakableEntity;
+import omnimudplus.Geography.Coordinates;
+import omnimudplus.Geography.Direction;
+import omnimudplus.Geography.Exit;
+import omnimudplus.Geography.PathfindingComparator;
+import omnimudplus.Geography.PathfindingNode;
+import omnimudplus.Geography.Room;
+import omnimudplus.Geography.Vector;
 
 public class GameFunction {
 	
 	public static void autoMove(Direction moveDir, Mobile mobile) {
 		
-		Room room = mobile.getRoom();
+		if (mobile instanceof Shell) {
+			
+			autoMove(moveDir, (Shell)mobile);
+			return;
+			
+		}
 		
-		Area area = mobile.getArea();
+		Room<?> room = mobile.getRoom();
 		
-		ConnectNode cn = mobile.getConnectNode();
-		
-		Room destination = null;
+		Room<?> destination = null;
 			
 		Exit exit = room.getExit(moveDir);
 			
@@ -32,29 +45,23 @@ public class GameFunction {
 		
 		if (destination != null) {
 				
-			Room prior = mobile.getRoom();
+			Room<?> prior = mobile.getRoom();
 			
 			mobile.setRoom(destination);
 					
 			Vector coors = new Vector(prior.getCoordinates(), destination.getCoordinates());
 			
-			mobile.takeMoveBalance((int)(mobile.getMoveSpeed()*coors.getAbsoluteOffset()), false);
+			mobile.takeMoveBalance((int)(mobile.getMoveSpeed()*coors.getAbsoluteOffset()));
 			
 			if (prior instanceof Room) {
 				
-				roomMsg(prior, mobile.getName() + " leaves to the " + moveDir.getName() + ".", cn);
+				roomMsg(prior, mobile.getName() + " leaves to the " + moveDir.getName() + ".");
 				
 			}
 				
 			if (destination instanceof Room) {
 				
-				roomMsg(destination, mobile.getName() + " arrives from the " + moveDir.getOpposite() + ".", cn);
-				
-				if (!mobile.isTraveling()) {
-				
-					cn.print(destination.printRoom(mobile));
-				
-				}
+				roomMsg(destination, mobile.getName() + " arrives from the " + moveDir.getOpposite() + ".");
 				
 			}
 
@@ -64,13 +71,65 @@ public class GameFunction {
 				
 				mobile.travelStop();
 				
-				if (cn != null) {
+			}
 
-					cn.println("You stop traveling.");
-					cn.print(destination.printRoom(mobile));
-					cn.putPrompt();
+		}
+
+	}
+	
+	public static void autoMove(Direction moveDir, Shell shell) {
+		
+		Room<?> room = shell.getRoom();
+		
+		ConnectNode cn = shell.getConnectNode();
+		
+		Room<?> destination = null;
+			
+		Exit exit = room.getExit(moveDir);
+			
+		if (exit != null) {
+			
+			destination = room.getExit(moveDir).getDestination();
+			
+		}
+		
+		if (destination != null) {
+				
+			Room<?> prior = shell.getRoom();
+			
+			shell.setRoom(destination);
+					
+			Vector coors = new Vector(prior.getCoordinates(), destination.getCoordinates());
+			
+			shell.takeMoveBalance((int)(shell.getMoveSpeed()*coors.getAbsoluteOffset()), false);
+			
+			if (prior instanceof Room) {
+				
+				roomMsg(prior, shell.getName() + " leaves to the " + moveDir.getName() + ".", cn);
+				
+			}
+				
+			if (destination instanceof Room) {
+				
+				roomMsg(destination, shell.getName() + " arrives from the " + moveDir.getOpposite() + ".", cn);
+				
+				if (!shell.isTraveling()) {
+				
+					cn.print(destination.printRoom(shell));
 				
 				}
+				
+			}
+
+		} else {
+			
+			if (shell.isTraveling()) {
+				
+				shell.travelStop();
+
+				cn.println("You stop traveling.");
+				cn.print(shell.getRoom().printRoom(shell));
+				cn.putPrompt();
 				
 			} else {
 				
@@ -82,29 +141,21 @@ public class GameFunction {
 
 	}
 	
-	public static Entity findFromInventory(String query, ConnectNode cn) {
+	public static TakableEntity findFromInventory(String query, ConnectNode cn) {
 		
-		for (Entity object : cn.getShell().getInventory()) {
-			
-			for (String q : object.getReferences()) {
-				
-				if (query.equals(q.toLowerCase())) {
-					
-					return object;
-					
-				}
-				
-			}
-			
-		}
+		Iterator<TakableEntity> inventory = cn.getShell().getInventory();
 		
-		return null;
+		return iteratorFind(query, inventory);
 		
 	}
 	
-	public static Entity findFromContainer(String query, Container container, ConnectNode cn) {
+	public static <T extends TakableEntity> T findFromContainer(String query, IHoldsTakables<T> container, ConnectNode cn) {
 		
-		for (Entity object : container.getContents()) {
+		Iterator<T> contents = container.getContents();
+		
+		while(contents.hasNext()) {
+			
+			T object = contents.next();
 			
 			for (String q : object.getReferences()) {
 				
@@ -124,7 +175,7 @@ public class GameFunction {
 	
 	public static Entity findFromReference(String query, ConnectNode cn) {
 		
-		Mobile mobile = cn.getShell();
+		Shell shell = cn.getShell();
 		
 		if (query != null) {
 		
@@ -133,40 +184,12 @@ public class GameFunction {
 				return cn.getShell();
 			
 			}
-		
-			Area area = mobile.getArea();
 			
-			Room room = mobile.getRoom();
+			Room<?> room = shell.getRoom();
 
-			List<Entity> objects = new ArrayList<Entity>();
+			Iterator<Entity> contents = room.getAllContents();
 			
-			for (Mobile other : area.getMobiles()) {
-				
-				if (other != mobile) {
-				
-					objects.add(other);
-				
-				}
-				
-			}
-
-			objects.addAll(room.getContents());
-
-			for (Entity object : objects) {
-
-				for (String q : object.getReferences()) {
-
-					if (query.equals(q.toLowerCase())) {
-					
-						return object;
-
-					}
-
-				}
-
-			}
-		
-			return null;
+			return iteratorFind(query, contents);
 			
 		}
 		
@@ -174,11 +197,179 @@ public class GameFunction {
 		
 	}
 	
-	public static void roomMsg(Room source, String msg) {
+	private static <E extends Entity> E iteratorFind(String query, Iterator<E> iterator) {
+		
+		while (iterator.hasNext()) {
 			
-		for (Mobile mobile : source.getMobiles()) {
+			E object = iterator.next();
+			
+			for (String q : object.getReferences()) {
+
+				if (query.equals(q.toLowerCase())) {
 				
-			ConnectNode cn = mobile.getConnectNode();
+					return object;
+
+				}
+
+			}
+			
+		}
+		
+		return null;
+		
+	}
+	
+	public static <E extends Entity> String printIteratorList(Iterator<E> iterator) {
+		
+		StringBuilder sb = new StringBuilder();
+		
+		if (iterator.hasNext()) {
+		
+			while (iterator.hasNext()) {
+			
+				E object = iterator.next();
+			
+				sb.append(object.getShortDesc());
+		
+				if (iterator.hasNext()) {
+		
+					sb.append(", ");
+			
+				}
+		
+			}
+	
+			sb.append(".");
+			
+		}
+		
+		return sb.toString();
+		
+	}
+	
+	public static Entity getFromRoom(Mobile mobile, TakableEntity entity) {
+		
+		Room<?> room = mobile.getRoom();
+		
+		if (room == null) {
+			return null;
+		}
+		
+		if (!room.containsEntity(entity)) {
+			return mobile;
+		}
+		
+		room.removeEntity(entity);
+		entity.setRoom(null);
+		mobile.addEntity(entity);
+		
+		roomMsg(room, mobile.getName() + " picks up " + entity.getShortDesc() + ".");
+		
+		return entity;
+		
+	}
+	
+	public static <T extends TakableEntity> Entity getFromContainer(Mobile mobile, Container<T> container, T entity) {
+		
+		Room<?> room = mobile.getRoom();
+		
+		if (!room.containsEntity(container) || !mobile.hasEntity(container)) {
+			return null;
+		}
+		
+		if (!container.containsEntity(entity)) {
+			return mobile;
+		}
+		
+		container.removeEntity(entity);
+		mobile.addEntity(entity);
+		
+		roomMsg(room, mobile.getName() + " removes " + entity.getShortDesc() + " from " + container.getShortDesc() + ".");
+		
+		return entity;
+		
+	}
+	
+	public static <T extends TakableEntity> Entity getFromIHoldsTakables(Mobile mobile, IHoldsTakables<T> container, T entity) {
+		
+		Room<?> room = mobile.getRoom();
+		
+		if (!room.containsEntity(container)) {
+			return null;
+		}
+		
+		if (!container.containsEntity(entity)) {
+			return mobile;
+		}
+		
+		container.removeEntity(entity);
+		mobile.addEntity(entity);
+		
+		roomMsg(room, mobile.getName() + " removes " + entity.getShortDesc() + " from " + container.getShortDesc() + ".");
+		
+		return entity;
+		
+	}
+	
+	public static Entity drop(Mobile mobile, Entity entity) {
+		
+		Room<?> room = mobile.getRoom();
+		
+		if (room == null) {
+			
+			return null;
+			
+		}
+		
+		if (!mobile.hasEntity(entity)) {
+			
+			return mobile;
+			
+		}
+		
+		mobile.removeEntity(entity);
+		mobile.getRoom().addEntity(entity);
+		entity.setRoom(mobile.getRoom());
+		
+		roomMsg(room, mobile.getName() + " drops " + entity.getShortDesc() + ".");
+		
+		return entity;
+		
+	}
+	
+	public static <T extends TakableEntity> Entity putInContainer(Mobile mobile, Container<T> container, T entity) {
+		
+		Room<?> room = mobile.getRoom();
+		
+		if (!room.containsEntity(container) || !mobile.hasEntity(container)) {
+			
+			return null;
+			
+		}
+		
+		if (!mobile.hasEntity(entity)) {
+			
+			return mobile;
+			
+		}
+		
+		mobile.removeEntity(entity);
+		
+		container.addEntity(entity);
+		
+		roomMsg(room, mobile.getName() + " puts " + entity.getShortDesc() + " into " + container.getShortDesc() + ".");
+		
+		return entity;
+		
+	}
+	
+	public static void roomMsg(Room<?> source, String msg) {
+		
+		Iterator<Shell> shells = source.getShells();
+		
+		while (shells.hasNext()) {
+				
+			ConnectNode cn = shells.next().getConnectNode();
 				
 			if (cn == null) {
 				continue;
@@ -192,11 +383,13 @@ public class GameFunction {
 
 	}
 
-	public static void roomMsg(Room source, String msg, ConnectNode exclude) {
-			
-		for (Mobile mobile : source.getMobiles()) {
+	public static void roomMsg(Room<?> source, String msg, ConnectNode exclude) {
+		
+		Iterator<Shell> shells = source.getShells();
+		
+		while (shells.hasNext()) {
 				
-			ConnectNode cn = mobile.getConnectNode();
+			ConnectNode cn = shells.next().getConnectNode();
 				
 			if (cn == exclude || cn == null) {
 				continue;
@@ -210,9 +403,9 @@ public class GameFunction {
 
 	}
     
-    public static int getApproximateDistance(Mobile mobile, Room room) {
+    public static int getApproximateDistance(Mobile mobile, Room<?> room) {
     	
-    	Coordinates mobileCoors = mobile.getCoordinates();
+    	Coordinates mobileCoors = mobile.getRoom().getCoordinates();
     	Coordinates roomCoors = room.getCoordinates();
     	
     	Vector coorOffset = new Vector(mobileCoors, roomCoors);
@@ -237,9 +430,9 @@ public class GameFunction {
     	
     }
     
-    public static Direction getAngleDirection(Mobile mobile, Room room) {
+    public static Direction getAngleDirection(Mobile mobile, Room<?> room) {
     	
-    	Coordinates mobileCoors = mobile.getCoordinates();
+    	Coordinates mobileCoors = mobile.getRoom().getCoordinates();
     	
     	Coordinates roomCoors = room.getCoordinates();
     	
@@ -418,9 +611,9 @@ public class GameFunction {
     	
     }
     
-    public static String getCompassString(Mobile mobile, Room room) {
+    public static String getCompassString(Mobile mobile, Room<?> room) {
     	
-    	Coordinates mobileCoors = mobile.getCoordinates();
+    	Coordinates mobileCoors = mobile.getRoom().getCoordinates();
     	
     	Coordinates locationCoors = room.getCoordinates();
     	
@@ -430,13 +623,13 @@ public class GameFunction {
     	
     }
  
-    public static ArrayList<Direction> findPath(Mobile mobile, Room destination) {
+    public static ArrayList<Direction> findPath(Mobile mobile, Room<?> destination) {
     
     	PriorityQueue<PathfindingNode> openQueue = 
     			new PriorityQueue<PathfindingNode>(25, new PathfindingComparator());
     	
-    	HashSet<Room> closedSet =
-    			new HashSet<Room>();
+    	HashSet<Room<?>> closedSet =
+    			new HashSet<Room<?>>();
     	
     	//ArrayList<PathfindingNode> openList = new ArrayList<PathfindingNode>();
     	//ArrayList<PathfindingNode> closedList = new ArrayList<PathfindingNode>();
@@ -624,9 +817,11 @@ public class GameFunction {
     	
     	display.append("\n\nCHARACTERS:\n");
     	
-    	for (Mobile mobile : account.getCharacters()) {
+    	Iterator<Shell> characters = account.getCharacters();
+    	
+    	while (characters.hasNext()) {
     		
-    		display.append(mobile.getName());
+    		display.append(characters.next().getName());
     		display.append("\n");
     		
     	}

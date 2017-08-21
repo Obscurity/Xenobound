@@ -4,19 +4,26 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.concurrent.ScheduledFuture;
 
-import omnimudplus.Entities.Mobile;
+import Runnables.MessageRunnable;
+import omnimudplus.Account.Account;
+import omnimudplus.Account.TempAccount;
+import omnimudplus.Colors.Color;
+import omnimudplus.Colors.ColorScheme;
+import omnimudplus.Colors.ColorSpectrum;
+import omnimudplus.Entities.Shell;
+import omnimudplus.Geography.Room;
 
 public class ConnectNode {
 	
 	private ConnectionState connState           = ConnectionState.CONNECTED;
 	private Account account                     = null;
-	private Mobile shell                        = null;
+	private Shell shell                        = null;
 	private SocketChannel client                = null;
 	private ColorScheme colorscheme             = new ColorScheme();
 	private ScheduledFuture<MessageRunnable> moveMessage;
 	private ScheduledFuture<MessageRunnable> actionMessage;
 	
-	public ConnectNode(Mobile shell, SocketChannel client) {
+	public ConnectNode(Shell shell, SocketChannel client) {
 		
 		this.shell = shell;
 		this.client = client;
@@ -31,13 +38,12 @@ public class ConnectNode {
 		
 	}
 	
-	public ConnectNode(Mobile shell, SocketChannel client, Room room) {
+	public ConnectNode(Shell shell, SocketChannel client, Room<?> room) {
 		
 		this.shell = shell;
 		this.client = client;
 		
 		shell.setRoom(room);
-		shell.setArea(room.getArea());
 		
 	}
 	
@@ -47,14 +53,14 @@ public class ConnectNode {
 		
 	}
 	
-	public void setShell(Mobile shell) {
+	public void setShell(Shell shell) {
 		
 		this.shell = shell;
 		shell.setConnectNode(this);
 		
 	}
 	
-	public Mobile getShell() {
+	public Shell getShell() {
 		
 		return shell;
 		
@@ -112,7 +118,7 @@ public class ConnectNode {
 				
 				commands.append("Please enter your desired account name: ");
 				
-			} else if (!AccountService.hasPassword(account)) {
+			} else if (((TempAccount)account).getPassword() == null) {
 				
 				commands.append("Enter a password for your account: ");
 				
@@ -130,7 +136,11 @@ public class ConnectNode {
 			
 		} else if (connState == ConnectionState.IN_GAME) {
 		
-			commands.append(ColorSpectrum.HEALTHSPECTRUM.getPromptHue(shell.getHealth(), shell.getMaxHealth()));
+			commands.append(
+					ColorSpectrum.HEALTHSPECTRUM.getPromptHue(
+							shell.getDurability(), shell.getMaxDurability()
+					)
+			);
 			
 			commands.append(shell.getHealth());
 			
@@ -140,11 +150,13 @@ public class ConnectNode {
 			
 			commands.append(ColorSpectrum.HEALTHSPECTRUM.getMax());
 			
-			commands.append(shell.getMaxHealth());
+			commands.append("100%h ");
 			
-			commands.append("h ");
-			
-			commands.append(ColorSpectrum.POWERSPECTRUM.getPromptHue(shell.getNrs(), shell.getMaxNrs()));
+			commands.append(
+					ColorSpectrum.POWERSPECTRUM.getPromptHue(
+							shell.getNrs(), shell.getMaxNrs()
+					)
+			);
 			
 			commands.append(shell.getNrs());
 			
@@ -197,7 +209,7 @@ public class ConnectNode {
 		
 		} catch (IOException e) {
 			
-			this.cleanup();
+			Omnimud.cleanup(this);
 			
 		}
 		
@@ -301,73 +313,6 @@ public class ConnectNode {
 		}
 		
 		moveMessage = mr;
-		
-	}
-	
-	public void cleanup() {
-		
-		System.out.println("Cleaning up " + account.getName() + " : " + shell.getName());
-		
-		try {
-		
-			AccountService.storeAccount(account);
-			
-		} catch (Exception e) {
-			
-		}
-		
-		if (connState == ConnectionState.IN_GAME) {
-		
-			if (shell.getRoom() != null) {
-				
-				shell.setRoom(null);
-				
-			}
-			
-			if (shell.isTraveling()) {
-				
-				shell.travelStop();
-				
-			}
-			
-			shell.stopRegen();
-			
-			try {
-			
-				this.client.close();
-				
-			} catch (IOException e) {
-				
-				e.printStackTrace();
-				
-			}
-			
-			shell.setArea(null);
-			
-			synchronized (Omnimud.playerlock) {
-				
-				Omnimud.players.remove(this);
-				Omnimud.playershells.remove(shell);
-			
-			}
-		
-		} else {
-			
-			try {
-				
-				this.client.close();
-				
-			} catch (IOException e) {
-				
-				e.printStackTrace();
-				
-			}
-			
-		}
-		
-	}
-	
-	public void disconnect() {
 		
 	}
 

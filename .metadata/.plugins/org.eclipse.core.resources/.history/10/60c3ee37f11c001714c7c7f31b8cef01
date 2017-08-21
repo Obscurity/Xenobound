@@ -1,5 +1,0 @@
-package omnimudplus;
-
-public enum OrganizationalPrivileges {
-
-}

@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
+import omnimudplus.Account.Account;
 import omnimudplus.Entities.Entity;
 import omnimudplus.Entities.Mobile;
 
@@ -65,7 +66,6 @@ public class Crawler {
         roots.add(Account.class); // ADD YOUR CLASSES HERE.
         roots.add(Mobile.class);
         roots.add(Entity.class);
-        roots.add(AccountService.class);
         roots.add(LinkedHashSet.class);
         roots.add(ConnectNode.class);
         HashMap<Field, HashSet<String>> badFields = initiateCrawling(roots);

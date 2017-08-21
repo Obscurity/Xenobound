@@ -4,75 +4,58 @@ import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import omnimudplus.Area;
+import Runnables.MessageRunnable;
+import Runnables.MobileRunnable;
+import Runnables.MobileRunnableType;
+import Runnables.TravelRunnable;
 import omnimudplus.ConnectNode;
-import omnimudplus.Direction;
 import omnimudplus.LockObject;
-import omnimudplus.Material;
-import omnimudplus.MessageRunnable;
-import omnimudplus.MobileRunnable;
-import omnimudplus.Room;
-import omnimudplus.TravelRunnable;
 import omnimudplus.Utilities;
-import omnimudplus.Vector;
+import omnimudplus.Effects.Effect;
+import omnimudplus.Geography.Area;
+import omnimudplus.Geography.Direction;
+import omnimudplus.Geography.Room;
+import omnimudplus.Geography.Vector;
 
-public class Mobile extends Entity implements Serializable {
+public abstract class Mobile extends Entity implements Serializable {
+
+	// TODO make everything property lock-synced
 	
-	private transient ConnectNode cn;
+	private int nrs; // Casting resource.
 
-	private final LockObject healthLock = new LockObject();
-
-	private int health; // Hit points, calculated from constitution.
-
-	private int maxHealth; // Maximum hit points, calculated from constitution.
-	
-	private final LockObject nrsLock = new LockObject();
-
-	private int nrs; // Casting resource, calculated from willpower.
-
-	private int maxNrs; // Maximum casting resource, calculated from willpower.
-	
-	private final LockObject statLock = new LockObject();
+	private int maxNrs; // Maximum casting resource.
 
 	private int weightCarried; // Amount of weight carried, calculated from inventory. Measured in ounces.
 
 	private int maxWeight; // Maximum weight carried, calculated from strength. Measured in ounces.
-	
-	private final LockObject inventoryLock = new LockObject();
 
-	private LinkedHashSet<Entity> inventory = new LinkedHashSet<Entity>();
+	private Body body;
 	
-	private final LockObject moveBalanceLock = new LockObject();
+	private LinkedHashSet<TakableEntity> inventory = new LinkedHashSet<TakableEntity>();
 	
 	private long moveBalance = 0;
 	
 	// In milliseconds. Subject to alteration.
 	
-	private int moveSpeed = 500;
-	
-	private final LockObject actionBalanceLock = new LockObject();
+	private static final int moveSpeed = 500;
 	
 	private long actionBalance = 0;
 	
-	private final LockObject regenBalanceLock = new LockObject();
-	
 	private long regenBalance = 0;
 	
-	private int regenPeriod = 15000;
+	private static final int regenPeriod = 15000;
 	
 	private transient ScheduledFuture<MobileRunnable> regenTask;
 	
-	private final LockObject nrsRegenBalanceLock = new LockObject();
-	
 	private long nrsRegenBalance = 0;
 	
-	private int nrsRegenPeriod = 15000;
+	private static final int nrsRegenPeriod = 15000;
 	
 	private transient ScheduledFuture<MobileRunnable> nrsRegenTask;
 	
-	private final LockObject travelLock = new LockObject();
-	
 	private transient ScheduledFuture<TravelRunnable> travelTask;
+	
+	private LinkedHashSet<Organization> organizations;
 	
 	static final private long serialVersionUID = 31L;
 
@@ -80,7 +63,7 @@ public class Mobile extends Entity implements Serializable {
 
 		super();
 
-		initHealth();
+		initDurability();
 
 		initNrs();
 
@@ -90,18 +73,15 @@ public class Mobile extends Entity implements Serializable {
 
 	}
 
-	public Mobile(ConnectNode cn, String name, String[] aliases, String shortDesc,
-			String roomDesc, String longDesc, int weight, Material material) {
+	public Mobile(String name, String[] aliases, String shortDesc,
+			String roomDesc, String longDesc, Material material,
+			Size size, Pronouns pronouns, Species species) {
 
-		super(name, aliases, shortDesc, roomDesc, longDesc, weight, material);
+		super(name, aliases, shortDesc, roomDesc, longDesc, 0, material, pronouns, size);
+
+		body = new Body(species);
 		
-		this.cn = cn;
-
-		this.health = 0;
-
-		this.maxHealth = 0;
-
-		initHealth();
+		initDurability();
 
 		initNrs();
 
@@ -109,23 +89,33 @@ public class Mobile extends Entity implements Serializable {
 
 		calcWeightCarried();
 
+		setWeight(body.getWeight());
+		
 	}
+	
+	public Mobile(String name, String[] aliases, String shortDesc,
+			String roomDesc, String longDesc, Material material,
+			Size size, Pronouns pronouns, Species species, Body body) {
 
-	public void initHealth() {
+		super(name, aliases, shortDesc, roomDesc, longDesc, 0, material, pronouns, size);
 
-		synchronized (healthLock) {
+		this.body = body;
+		
+		initDurability();
 
-			maxHealth = 10;
+		initNrs();
 
-			health = maxHealth;
+		initMaxWeight();
 
-		}
+		calcWeightCarried();
 
+		setWeight(body.getWeight());
+		
 	}
 
 	public void initNrs() {
 
-		synchronized (nrsLock) {
+		synchronized (getPropertyLock()) {
 
 			maxNrs = 10;
 
@@ -137,7 +127,7 @@ public class Mobile extends Entity implements Serializable {
 
 	public void initMaxWeight() {
 
-		synchronized (propertyLock) {
+		synchronized (getPropertyLock()) {
 
 			maxWeight = 160;
 
@@ -147,7 +137,7 @@ public class Mobile extends Entity implements Serializable {
 
 	public int getMaxWeight() {
 
-		synchronized (propertyLock) {
+		synchronized (getPropertyLock()) {
 
 			return maxWeight;
 
@@ -157,7 +147,7 @@ public class Mobile extends Entity implements Serializable {
 
 	public void calcWeightCarried() {
 
-		synchronized (propertyLock) {
+		synchronized (getPropertyLock()) {
 
 			weightCarried = 0;
 
@@ -173,7 +163,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public int getWeightCarried() {
 		
-		synchronized (propertyLock) {
+		synchronized (getPropertyLock()) {
 			
 			calcWeightCarried();
 			
@@ -183,72 +173,15 @@ public class Mobile extends Entity implements Serializable {
 		
 	}
 
-	public int getHealth() {
-
-		synchronized (healthLock) {
-
-			return health;
-
-		}
-
-	}
-
-	public void setHealth(int health) {
-
-		synchronized (healthLock) {
-
-			this.health = health;
-
-		}
-
-	}
-
-	public void takeDamage(int damage) {
-
-		synchronized (healthLock) {
-
-			health -= damage;
-			resetRegenBalance(regenPeriod);
-
-		}
-
-	}
-
-	public void healDamage(int heal) {
-
-		synchronized (healthLock) {
-
-			health += heal;
-			
-			resetRegenBalance(regenPeriod);
-
-		}
-
-	}
-
-	public int getMaxHealth() {
-
-		synchronized (healthLock) {
-
-			return maxHealth;
-
-		}
-
-	}
-
-	public void setMaxHealth(int maxHealth) {
-
-		synchronized (healthLock) {
-
-			this.maxHealth = maxHealth;
-
-		}
-
+	public void applyEffect(Effect e) {
+		
+		body.applyEffect(e);
+		
 	}
 
 	public int getNrs() {
 
-		synchronized (nrsLock) {
+		synchronized (getPropertyLock()) {
 
 			return nrs;
 
@@ -258,7 +191,7 @@ public class Mobile extends Entity implements Serializable {
 
 	public void setNrs(int nrs) {
 
-		synchronized (nrsLock) {
+		synchronized (getPropertyLock()) {
 
 			this.nrs = nrs;
 
@@ -268,7 +201,7 @@ public class Mobile extends Entity implements Serializable {
 
 	public void spendNrs(int drain) {
 
-		synchronized (nrsLock) {
+		synchronized (getPropertyLock()) {
 
 			nrs -= drain;
 			
@@ -280,7 +213,7 @@ public class Mobile extends Entity implements Serializable {
 
 	public void gainNrs(int gain) {
 
-		synchronized (nrsLock) {
+		synchronized (getPropertyLock()) {
 
 			nrs += gain;
 			
@@ -292,7 +225,7 @@ public class Mobile extends Entity implements Serializable {
 
 	public int getMaxNrs() {
 
-		synchronized (nrsLock) {
+		synchronized (getPropertyLock()) {
 
 			return maxNrs;
 
@@ -302,7 +235,7 @@ public class Mobile extends Entity implements Serializable {
 
 	public void setMaxNrs(int maxNrs) {
 
-		synchronized (nrsLock) {
+		synchronized (getPropertyLock()) {
 
 			this.maxNrs = maxNrs;
 
@@ -312,7 +245,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public int getRegenPeriod() {
 		
-		synchronized (regenBalanceLock) {
+		synchronized (getPropertyLock()) {
 		
 			return regenPeriod;
 		
@@ -322,7 +255,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public int getNrsRegenPeriod() {
 		
-		synchronized (nrsRegenBalanceLock) {
+		synchronized (getPropertyLock()) {
 			
 			return nrsRegenPeriod;
 			
@@ -330,9 +263,9 @@ public class Mobile extends Entity implements Serializable {
 		
 	}
 	
-	public void setInventory(LinkedHashSet<Entity> inventory) {
+	public void setInventory(LinkedHashSet<TakableEntity> inventory) {
 
-		synchronized (inventoryLock) {
+		synchronized (getPropertyLock()) {
 
 			this.inventory = inventory;
 
@@ -340,19 +273,29 @@ public class Mobile extends Entity implements Serializable {
 
 	}
 
-	public LinkedHashSet<Entity> getInventory() {
+	public Iterator<TakableEntity> getInventory() {
 
-		synchronized (inventoryLock) {
+		synchronized (getPropertyLock()) {
 
-			return inventory;
+			return inventory.iterator();
 
 		}
 
 	}
+	
+	public int getInventoryCount() {
+		
+		synchronized (getPropertyLock()) {
+			
+			return inventory.size();
+			
+		}
+		
+	}
 
-	public void addEntity(Entity entity) {
+	public void addEntity(TakableEntity entity) {
 
-		synchronized (inventoryLock) {
+		synchronized (getPropertyLock()) {
 
 			inventory.add(entity);
 
@@ -362,12 +305,22 @@ public class Mobile extends Entity implements Serializable {
 
 	public void removeEntity(Entity entity) {
 
-		synchronized (inventoryLock) {
+		synchronized (getPropertyLock()) {
 
 			inventory.remove(entity);
 
 		}
 
+	}
+	
+	public boolean hasEntity(Entity entity) {
+		
+		synchronized (getPropertyLock()) {
+			
+			return inventory.contains(entity);
+			
+		}
+		
 	}
 	
 	public boolean hasActionBalance() {
@@ -396,7 +349,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public boolean hasRegenBalance() {
 		
-		synchronized (regenBalanceLock) {
+		synchronized (getPropertyLock()) {
 			
 			if (regenBalance < System.currentTimeMillis()) {
 				
@@ -412,7 +365,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public boolean hasNrsRegenBalance() {
 		
-		synchronized (nrsRegenBalanceLock) {
+		synchronized (getPropertyLock()) {
 			
 			if (nrsRegenBalance < System.currentTimeMillis()) {
 				
@@ -428,7 +381,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public long getActionBalance() {
 		
-		synchronized (actionBalanceLock) {
+		synchronized (getPropertyLock()) {
 			
 			return actionBalance;
 			
@@ -438,7 +391,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public long getMoveBalance() {
 		
-		synchronized (moveBalanceLock) {
+		synchronized (getPropertyLock()) {
 			
 			return moveBalance;
 			
@@ -448,7 +401,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public long getRegenBalance() {
 		
-		synchronized (regenBalanceLock) {
+		synchronized (getPropertyLock()) {
 			
 			return regenBalance;
 			
@@ -459,7 +412,7 @@ public class Mobile extends Entity implements Serializable {
 	@SuppressWarnings("unchecked")
 	public void takeActionBalance(ConnectNode cn, long value, boolean message) {
 		
-		synchronized (actionBalanceLock) {
+		synchronized (getPropertyLock()) {
 		
 			if (actionBalance < System.currentTimeMillis()) {
 				
@@ -487,36 +440,17 @@ public class Mobile extends Entity implements Serializable {
 		
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void takeMoveBalance(long value, boolean message) {
+	public void takeMoveBalance(long value) {
 		
-		synchronized (moveBalanceLock) {
+		synchronized (getPropertyLock()) {
 			
 			if (moveBalance < System.currentTimeMillis()) {
 				
 				moveBalance = System.currentTimeMillis() + value;
 				
-				if (!message) { return; }
-				
-				if (cn != null) {
-				
-					cn.setMoveMessage((ScheduledFuture<MessageRunnable>)Utilities.schedule(new MessageRunnable(cn, "You may move once again."), value, TimeUnit.MILLISECONDS));
-				
-				}
-				
 			} else {
 				
 				moveBalance += value;
-				
-				if (!message) { return; }
-				
-				long offset = moveBalance - System.currentTimeMillis();
-				
-				if (cn != null) {
-				
-					cn.setMoveMessage((ScheduledFuture<MessageRunnable>)Utilities.schedule(new MessageRunnable(cn, "You may move once again."), offset, TimeUnit.MILLISECONDS));
-					
-				}
 				
 			}
 			
@@ -535,9 +469,9 @@ public class Mobile extends Entity implements Serializable {
 			
 		}
 			
-		if (health < maxHealth) {
+		if (isDamaged()) {
 		
-			regenTask = (ScheduledFuture<MobileRunnable>)Utilities.schedule(new MobileRunnable(this, "regen"), value, TimeUnit.MILLISECONDS);
+			regenTask = (ScheduledFuture<MobileRunnable>)Utilities.schedule(new MobileRunnable(this, MobileRunnableType.REGEN), value, TimeUnit.MILLISECONDS);
 					
 		}
 		
@@ -556,7 +490,7 @@ public class Mobile extends Entity implements Serializable {
 			
 		if (nrs < maxNrs) {
 		
-			nrsRegenTask = (ScheduledFuture<MobileRunnable>)Utilities.schedule(new MobileRunnable(this, "nrsRegen"), value, TimeUnit.MILLISECONDS);
+			nrsRegenTask = (ScheduledFuture<MobileRunnable>)Utilities.schedule(new MobileRunnable(this, MobileRunnableType.NRS_REGEN), value, TimeUnit.MILLISECONDS);
 					
 		}
 		
@@ -592,7 +526,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public void takeRegenBalance(long value) {
 		
-		synchronized (regenBalanceLock) {
+		synchronized (getPropertyLock()) {
 			
 			long predictiveTime = System.currentTimeMillis() + value;
 			
@@ -609,36 +543,30 @@ public class Mobile extends Entity implements Serializable {
 	@SuppressWarnings("unchecked")
 	public void setTravelCommand(Direction dir) {
 		
-		synchronized (travelLock) {
+		synchronized (getPropertyLock()) {
 		
-			if (travelTask != null) {
+			if (getTravelTask() != null) {
 			
-				travelTask.cancel(false);
-				travelTask = null;
+				getTravelTask().cancel(false);
+				setTravelTask(null);
 			
-			} else {
-				
-				if (cn != null) {
-					
-					cn.println("You start traveling to the " + dir.getName() + ".");
-				
-				}
-				
 			}
 			
-			Room destination = this.getRoom().getExit(dir).getDestination();
+			Room<?> origin = this.getRoom();
+			
+			Room<?> destination = origin.getExit(dir).getDestination();
 			
 			int milliCost = 500;
 			
 			if (destination != null) {
 				
-				Vector coors = new Vector(getCoordinates(), destination.getCoordinates());
+				Vector coors = new Vector(origin.getCoordinates(), destination.getCoordinates());
 			
 				milliCost = (int)(moveSpeed*coors.getAbsoluteOffset());
 			
 			}
 			
-			travelTask = (ScheduledFuture<TravelRunnable>)Utilities.scheduleAtFixedRate(new TravelRunnable(this, dir), milliCost, milliCost, TimeUnit.MILLISECONDS);
+			setTravelTask((ScheduledFuture<TravelRunnable>)Utilities.scheduleAtFixedRate(new TravelRunnable(this, dir), milliCost, milliCost, TimeUnit.MILLISECONDS));
 		
 		}
 		
@@ -647,36 +575,30 @@ public class Mobile extends Entity implements Serializable {
 	@SuppressWarnings("unchecked")
 	public void setTravelCommand(Direction dir, int count) {
 		
-		synchronized (travelLock) {
+		synchronized (getPropertyLock()) {
 			
-			if (travelTask != null) {
+			if (getTravelTask() != null) {
 			
-				travelTask.cancel(false);
-				travelTask = null;
+				getTravelTask().cancel(false);
+				setTravelTask(null);
 			
-			} else {
-				
-				if (cn != null) {
-					
-					cn.println("You start traveling to the " + dir.getName() + ".");
-				
-				}
-				
 			}
 			
-			Room destination = room.getExit(dir).getDestination();
+			Room<?> origin = this.getRoom();
+			
+			Room<?> destination = origin.getExit(dir).getDestination();
 			
 			int milliCost = 500;
 			
 			if (destination != null) {
 				
-				Vector coors = new Vector(getCoordinates(), destination.getCoordinates());
+				Vector coors = new Vector(origin.getCoordinates(), destination.getCoordinates());
 				
 				milliCost = (int)(moveSpeed*coors.getAbsoluteOffset());
 			
 			}
 			
-			travelTask = (ScheduledFuture<TravelRunnable>)Utilities.scheduleAtFixedRate(new TravelRunnable(this, dir, count), milliCost, milliCost, TimeUnit.MILLISECONDS);
+			setTravelTask((ScheduledFuture<TravelRunnable>)Utilities.scheduleAtFixedRate(new TravelRunnable(this, dir, count), milliCost, milliCost, TimeUnit.MILLISECONDS));
 			
 		}
 		
@@ -687,37 +609,31 @@ public class Mobile extends Entity implements Serializable {
 		
 		Direction dir = path.get(count);
 		
-		if (travelTask != null) {
+		if (getTravelTask() != null) {
 			
-			travelTask.cancel(false);
-			travelTask = null;
-			
-		} else {
-			
-			if (cn != null) {
-				
-				cn.println("You start traveling.");
-				
-			}
+			getTravelTask().cancel(false);
+			setTravelTask(null);
 			
 		}
 		
-		Room destination = room.getExit(dir).getDestination();
+		Room<?> origin = getRoom();
 		
-		Vector coors = new Vector(getCoordinates(), destination.getCoordinates());
+		Room<?> destination = getRoom().getExit(dir).getDestination();
+		
+		Vector coors = new Vector(origin.getCoordinates(), destination.getCoordinates());
 		
 		int milliCost = (int)(moveSpeed*coors.getAbsoluteOffset());
 		
-		travelTask = (ScheduledFuture<TravelRunnable>)Utilities.scheduleAtFixedRate(new TravelRunnable(this, path, count), milliCost, milliCost, TimeUnit.MILLISECONDS);
+		setTravelTask((ScheduledFuture<TravelRunnable>)Utilities.scheduleAtFixedRate(new TravelRunnable(this, path, count), milliCost, milliCost, TimeUnit.MILLISECONDS));
 		
 	}
 	
 	public void travelStop() {
 		
-		if (travelTask != null) {
+		if (getTravelTask() != null) {
 			
-			travelTask.cancel(false);
-			travelTask = null;
+			getTravelTask().cancel(false);
+			setTravelTask(null);
 			
 		}
 		
@@ -725,7 +641,7 @@ public class Mobile extends Entity implements Serializable {
 	
 	public boolean isTraveling() {
 		
-		if (travelTask != null) {
+		if (getTravelTask() != null) {
 		
 			return true;
 		
@@ -735,140 +651,161 @@ public class Mobile extends Entity implements Serializable {
 		
 	}
 	
-	public LockObject getTravelLock() {
-		
-		return travelLock;
-		
-	}
-	
-	public LockObject getActionBalanceLock() {
-		
-		synchronized (actionBalanceLock) {
-		
-			return actionBalanceLock;
-		
-		}
-		
-	}
-	
-	public LockObject getMoveBalanceLock() {
-		
-		synchronized (moveBalanceLock) {
-		
-			return moveBalanceLock;
-		
-		}
-		
-	}
-	
-	public LockObject getRegenBalanceLock() {
-		
-		synchronized (regenBalanceLock) {
-			
-			return regenBalanceLock;
-			
-		}
-		
-	}
-	
 	public int getMoveSpeed() {
 		
-		synchronized (moveBalanceLock) {
+		synchronized (getPropertyLock()) {
 			
 			return moveSpeed;
 			
 		}
 		
 	}
-	
-	public boolean isPlayer() {
+
+	public LinkedHashSet<Organization> getOrganizations() {
 		
-		if (cn != null) {
-			return true;
+		synchronized (getPropertyLock()) {
+		
+			return organizations;
+		
 		}
-		
-		return false;
 		
 	}
-	
-	public void setArea(Area area) {
+
+	public void setOrganizations(LinkedHashSet<Organization> organizations) {
 		
-		if (this.area != null) {
-			
-			this.area.removeMobile(this);
-			
-		}
-		
-		this.area = area;
-		
-		if (this.area != null) {
-			
-			this.area.addMobile(this);
-			
+		synchronized (getPropertyLock()) {
+			this.organizations = organizations;
 		}
 		
 	}
 	
-	public void setRoom(Room room) {
+	public void addOrganization(Organization organization) {
 		
-		if (this.room != null) {
-				
-			Room reassign = this.room;
-				
-			reassign.removeMobile(this);
-				
-			if (reassign.getArea() != null) {
-				
-				reassign.getArea().removeMobile(this);
-				
-			}
-			
-		}
-		
-		this.room = room;
-		
-		this.coors = null;
-		
-		if (room != null) {
-			
-			this.coors = room.getCoordinates();
-			
-			room.addMobile(this);
-			
-			Area area = room.getArea();
-			
-			if (area != null) {
-				
-				room.getArea().addMobile(this);
-				
-				setArea(room.getArea());
-				
-			}
-			
+		synchronized (getPropertyLock()) {
+			organizations.add(organization);
 		}
 		
 	}
 	
-	public void setConnectNode(ConnectNode cn) {
+	public void removeOrganization(Organization organization) {
 		
-		this.cn = cn;
+		synchronized (getPropertyLock()) {
+			organizations.remove(organization);
+		}
 		
 	}
 	
-	public ConnectNode getConnectNode() {
+	public boolean belongsToOrg(Organization organization) {
 		
-		return cn;
+		synchronized (getPropertyLock()) {
+			return organizations.contains(organization);
+		}
 		
 	}
 	
 	public String toString() {
 
-		String str = super.toString();
+		synchronized (getPropertyLock()) {
+		
+			String str = super.toString();
+	
+			str = str + "\nhealth: " + getDurability() + "\nmaxhealth: " + getMaxDurability() +
+					"\nnrs: " + nrs + "\nmaxnrs: " + maxNrs + "\nweightcarried: "
+					+ weightCarried + "\nmaxweight: " + maxWeight + "\ninventory: "
+					+ inventory;
+	
+			return str;
+		
+		}
 
-		str = str + "\nhealth: " + health + "\nmaxhealth: " + maxHealth + "\nnrs: " + nrs + "\nmaxnrs: " + maxNrs + "\nweightcarried: " + weightCarried + "\nmaxweight: " + maxWeight + "\ninventory: " + inventory;
+	}
 
-		return str;
+	public ScheduledFuture<TravelRunnable> getTravelTask() {
+		
+		synchronized (getPropertyLock()) {
+		
+			return travelTask;
+		
+		}
+		
+	}
 
+	public void setTravelTask(ScheduledFuture<TravelRunnable> travelTask) {
+		
+		synchronized (getPropertyLock()) {
+		
+			this.travelTask = travelTask;
+		
+		}
+		
+	}
+
+	public Body getBody() {
+		
+		synchronized (getPropertyLock()) {
+		
+			return body;
+		
+		}
+		
+	}
+	
+	public void initDurability() {
+		
+		if (body != null) {
+			
+			setMaxDurability(body.getDurability());
+			
+			setDurability(body.getDurability());
+			
+			return;
+			
+		}
+		
+		// Failsafe.
+		super.initDurability();
+		
+	}
+	
+	public boolean isDamaged() {
+		
+		synchronized (getPropertyLock()) {
+		
+			if (body.isDamaged()) {
+				return true;
+			}
+			return false;
+		
+		}
+		
+	}
+	
+	public int getHealth() {
+		
+		return (int)(((double)body.getDurability()/body.getMaxDurability())*100);
+		
+	}
+	
+	public int getDurability() {
+		return body.getDurability();
+	}
+	
+	public int getMaxDurability() {
+		return body.getMaxDurability();
+	}
+	
+	protected void setMaxDurability(int maxDurability) {
+		body.setMaxDurability(maxDurability);
+	}
+	
+	// These methods simply do not apply to mobiles, so we overwrite them.
+	
+	public void addDurability(int offset) {
+
+	}
+	
+	public void removeDurability(int offset) {
+		
 	}
 
 }

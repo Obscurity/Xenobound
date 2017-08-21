@@ -1,24 +1,35 @@
 package omnimudplus;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.Random;
 
+import omnimudplus.Colors.Color;
+import omnimudplus.Entities.Appendage;
+import omnimudplus.Entities.BodyPart;
 import omnimudplus.Entities.Building;
+import omnimudplus.Entities.Container;
 import omnimudplus.Entities.Entity;
 import omnimudplus.Entities.Feature;
 import omnimudplus.Entities.Mobile;
+import omnimudplus.Entities.Shell;
+import omnimudplus.Entities.TakableEntity;
+import omnimudplus.Geography.Area;
+import omnimudplus.Geography.BuildingArea;
+import omnimudplus.Geography.BuildingRoom;
+import omnimudplus.Geography.Coordinates;
+import omnimudplus.Geography.Direction;
+import omnimudplus.Geography.Room;
 
 public class IngameParser {
 
 	public static void parse(String[] command, ConnectNode cn) {
 		
-		Mobile mobile = cn.getShell();
+		Shell shell = cn.getShell();
 		
 		
 		
-		System.out.print(mobile.getName() + ":");
+		System.out.print(shell.getName() + ":");
 		
 		for (String s : command) {
 			
@@ -32,7 +43,7 @@ public class IngameParser {
 			
 			if (test.getName().equals(command[0].toLowerCase()) || test.getShortName().equals(command[0].toLowerCase())) {
 				
-				move(mobile, test);
+				move(shell, test);
 				return;
 				
 			}
@@ -52,32 +63,33 @@ public class IngameParser {
 		case "northwest": case "nw": travel(mobile, Direction.NORTHWEST); break;
 		case "up": case "u": travel(mobile, Direction.UP); break;
 		case "down": case "d": travel(mobile, Direction.DOWN); break; */
-		case "findpath": findPath(fromIndex(command, 1), mobile); break;
-		case "stop": stop(mobile); break;
-		case "look": case "l": if (command.length <= 1) { look(mobile); } else { look(command, mobile); } break;
-		case "map": cn.print(mobile.getArea().getMapString(mobile, 5)); break;
+		case "findpath": findPath(fromIndex(command, 1), shell); break;
+		case "stop": stop(shell); break;
+		case "look": case "l": if (command.length <= 1) { look(shell); } else { look(command, shell); } break;
+		case "map": cn.print(shell.getArea().getMapString(shell, 5)); break;
 		case "status": case "stat": status(cn); break;
 		case "quit": case "qq": quit(cn); break;
-		case "say": case "'": case "sing": say(command, mobile); break;
+		case "say": case "'": case "sing": say(command, shell); break;
 		case "i": case "inv": case "inventory": inventory(cn); break;
 		case "get": case "take": if (command.length > 1) {
-													get(command, mobile);
+													get(command, shell);
 												} else {
-													if (cn != null) { cn.println(command[0].substring(0, 1).toUpperCase() + command[0].substring(1) + " what?"); };
+													cn.println(command[0].substring(0, 1).toUpperCase() + command[0].substring(1) + " what?");
 												}
 												break;
-		case "drop": if (command.length > 1) { drop(command, mobile); } else { if (cn != null) { cn.println("Drop what?"); } } break;
-		case "put": if (command.length > 1) { put(command, mobile); } else { if (cn != null) { cn.println("Put what in what?"); } } break;
-		case "go": if (command.length > 1) { go(fromIndex(command, 1), cn); } else { if (cn != null) { cn.println("Go where?"); } } break;
-		case "who": who(cn); break;
+		case "drop": if (command.length > 1) { drop(command, shell); } else { cn.println("Drop what?"); } break;
+		case "put": if (command.length > 1) { put(command, shell); } else { cn.println("Put what in what?"); } break;
+		case "go": if (command.length > 1) { go(fromIndex(command, 1), cn); } else { cn.println("Go where?"); } break;
+		case "who": Omnimud.who(cn); break;
 		case "colors": if (command.length > 1) { colors(fromIndex(command, 1), cn); } else { colors(cn); } break;
 		case "end": end(cn); break;
-		case "newroom": if (command.length > 1) { newRoom(fromIndex(command, 1), mobile); } else { cn.println("Create a new room where?"); } break;
-		case "punch": if (command.length > 1) { attack(mobile, fromIndex(command, 1), Attack.PUNCH); } else { if (cn != null) { cn.println("Punch what?"); } } break;
-		case "fireball": if (command.length > 1) { attack(mobile, fromIndex(command, 1), Attack.FIREBALL); } else { if (cn != null) { cn.println("Cast fireball at what?"); } }; break;
-		case "enter": enter(mobile); break;
-		case "leave": leave(mobile); break;
-		case "area": System.out.println(mobile.getName() + ": " + mobile.getArea()); break;
+		case "newroom": if (command.length > 1) { newRoom(fromIndex(command, 1), shell); } else { cn.println("Create a new room where?"); } break;
+		case "punch": if (command.length > 1) { attack(shell, fromIndex(command, 1), Attack.PUNCH); } else { cn.println("Punch what?"); } break;
+		case "fireball": if (command.length > 1) { attack(shell, fromIndex(command, 1), Attack.FIREBALL); } else { cn.println("Cast fireball at what?"); }; break;
+		case "enter": enter(shell); break;
+		case "leave": leave(shell); break;
+		case "area": System.out.println(shell.getName() + ": " + shell.getArea()); break;
+		case "body": body(shell); break;
 		default: invalid(cn); break;
 
 		}
@@ -106,24 +118,24 @@ public class IngameParser {
 		
 	}
 
-	public static void move(Mobile mobile, Direction moveDir) {
+	public static void move(Shell shell, Direction moveDir) {
 		
-		ConnectNode cn = mobile.getConnectNode();
+		ConnectNode cn = shell.getConnectNode();
 		
-		if (!mobile.hasMoveBalance()) {
+		if (!shell.hasMoveBalance()) {
 			
 			cn.println("You can't move that quickly.");
 			return;
 			
 		}
 		
-		GameFunction.autoMove(moveDir, mobile);
+		GameFunction.autoMove(moveDir, shell);
 
 	}
 	
-	public static void stop(Mobile mobile) {
+	public static void stop(Shell shell) {
 		
-		ConnectNode cn = mobile.getConnectNode();
+		ConnectNode cn = shell.getConnectNode();
 		
 		if (cn.getShell().isTraveling()) {
 			
@@ -134,15 +146,11 @@ public class IngameParser {
 		
 	}
 
-	public static void look(Mobile mobile) {
+	public static void look(Shell shell) {
 		
-		ConnectNode cn = mobile.getConnectNode();
-		
-		if (cn == null) {
-			return;
-		}
+		ConnectNode cn = shell.getConnectNode();
 
-		cn.print(mobile.getRoom().printRoom(mobile));
+		cn.print(shell.getRoom().printRoom(shell));
 
 	}
 
@@ -154,7 +162,7 @@ public class IngameParser {
 
 		cn.println("You have disconnected.");
 		
-		cn.cleanup();
+		Omnimud.cleanup(cn);
 
 	}
 
@@ -172,9 +180,9 @@ public class IngameParser {
 
 	}
 
-	public static void say(String[] words, Mobile mobile) {
+	public static void say(String[] words, Shell shell) {
 
-		ConnectNode cn = mobile.getConnectNode();
+		ConnectNode cn = shell.getConnectNode();
 		
 		String speech = "";
 
@@ -265,16 +273,14 @@ public class IngameParser {
 			}
 
 			if (words[0].toLowerCase().equals("sing")) { verb = "sing"; }
-
-			LinkedHashSet<Mobile> mobiles = null;
 			
-			Room room = mobile.getRoom();
+			Room<?> room = shell.getRoom();
 
-			mobiles = room.getMobiles();
+			Iterator<Shell> shells = room.getShells();
 			
 			StringBuilder builder = new StringBuilder();
 
-			builder.append(mobile.getName());
+			builder.append(shell.getName());
 			builder.append(" ");
 			builder.append(verb);
 			builder.append("s, \"");
@@ -283,9 +289,9 @@ public class IngameParser {
 			
 			String output = builder.toString();
 					
-			for (Mobile other : mobiles) {
+			while (shells.hasNext()) {
 					
-				ConnectNode oc = other.getConnectNode();
+				ConnectNode oc = shells.next().getConnectNode();
 					
 				if (oc == cn || oc == null) {
 					continue;
@@ -296,31 +302,19 @@ public class IngameParser {
 						
 			}
 				
-			if (cn != null) {
-				
-				cn.println(cn.getColorScheme().getSpeech() + "You " + verb + ", \"" + speech + "\"" + cn.getColorScheme().getForeground());
-				
-			}
+			cn.println(cn.getColorScheme().getSpeech() + "You " + verb + ", \"" + speech + "\"" + cn.getColorScheme().getForeground());
 
 		} else {
-			
-			if (cn != null) {
 
-				cn.println("You exercise your right to remain silent.");
-
-			}
+			cn.println("You exercise your right to remain silent.");
 			
 		}
 
 	}
 
-	public static void look (String[] input, Mobile mobile) {
+	public static <T extends TakableEntity> void look (String[] input, Shell shell) {
 		
-		ConnectNode cn = mobile.getConnectNode();
-		
-		if (cn == null) {
-			return;
-		}
+		ConnectNode cn = shell.getConnectNode();
 		
 		String query;
 		
@@ -354,7 +348,7 @@ public class IngameParser {
 			
 		} else {
 			
-			if (!query.equals(reference.getName())) {
+			if (!query.equals(reference.getName().toLowerCase())) {
 			
 				cn.println("(looking at " + reference.getName() + ")");
 			
@@ -362,35 +356,18 @@ public class IngameParser {
 			
 			cn.println(reference.getLongDesc());
 			
-			if (reference instanceof Container) {
+			if (reference instanceof Container<?>) {
 				
-				Container container = (Container)reference;
+				@SuppressWarnings("unchecked")
+				Container<T> container = (Container<T>)reference;
 				
-				if (container.getContents().size() > 0) {
+				Iterator<T> contents = container.getContents();
+				
+				if (contents.hasNext()) {
 				
 					cn.print("It is currently holding ");
 				
-					int items = 0;
-				
-					for (Entity object : container.getContents()) {
-					
-						items++;
-					
-						cn.print(object.getShortDesc());
-				
-						if (items <= container.getContents().size() - 2) {
-				
-							cn.print(", ");
-					
-						} else if (items == container.getContents().size() - 1) {
-						
-							cn.print(", and ");
-						
-						}
-				
-					}
-			
-					cn.println(".");
+					cn.print(GameFunction.printIteratorList(contents));
 					
 				}
 				
@@ -422,23 +399,27 @@ public class IngameParser {
 	
 	public static void inventory (ConnectNode cn) {
 		
-		if (cn.getShell().getInventory().size() > 0) {
+		Iterator<TakableEntity> inventory = cn.getShell().getInventory();
+		
+		int upperbound = cn.getShell().getInventoryCount();
+		
+		if (inventory.hasNext()) {
 		
 			int items = 0;
 			
 			cn.println("You are carrying:");
 		
-			for (Entity object : cn.getShell().getInventory()) {
-			
+			while (inventory.hasNext()) {
+				
 				items++;
 				
-				cn.print(object.getShortDesc());
+				cn.print(inventory.next().getShortDesc());
 			
-				if (items <= cn.getShell().getInventory().size() - 2) {
+				if (items < upperbound - 2) {
 			
 					cn.print(", ");
 				
-				} else if (items == cn.getShell().getInventory().size() - 1) {
+				} else {
 					
 					cn.print(", and ");
 					
@@ -456,11 +437,11 @@ public class IngameParser {
 			
 			if (ounces == 0) {
 			
-				cn.println("You have " + cn.getShell().getInventory().size() + " items, weighing " + pounds + " pounds.");
+				cn.println("You have " + upperbound + " items, weighing " + pounds + " pounds.");
 				
 			} else {
 				
-				cn.println("You have " + cn.getShell().getInventory().size() + " items, weighing " + pounds + " pounds and " + ounces + " ounces.");
+				cn.println("You have " + upperbound + " items, weighing " + pounds + " pounds and " + ounces + " ounces.");
 				
 			}
 		
@@ -472,13 +453,13 @@ public class IngameParser {
 		
 	}
 	
-	public static void get (String[] input, Mobile mobile) {
+	public static void get (String[] input, Shell shell) {
 		
-		ConnectNode cn = mobile.getConnectNode();
+		ConnectNode cn = shell.getConnectNode();
 		
 		String query = null;
 		String indirect = null;
-		Container container = null;
+		Container<?> container = null;
 		
 		if (input.length < 4) {
 		
@@ -492,101 +473,98 @@ public class IngameParser {
 				
 				indirect = input[3].toLowerCase();
 				
-				container = (Container)GameFunction.findFromInventory(indirect, cn);
+				Entity temp = GameFunction.findFromInventory(indirect, cn);
 				
-				container = container == null ? (Container)GameFunction.findFromReference(indirect, cn) : container;
+				if (temp instanceof Container) {
+				
+					container = (Container<?>)temp;
+				
+				}
+				
+				temp = GameFunction.findFromReference(indirect, cn);
+				
+				if (temp instanceof Container) {
+				
+					container = container == null ? (Container<?>)temp : container;
+				
+				}
 				
 			}
 			
 		}
 		
-		Entity reference = container == null ? GameFunction.findFromReference(query, cn) : GameFunction.findFromContainer(query, container, cn);
+		Entity reference;
+		
+		if (container == null) {
+			
+			reference = GameFunction.findFromReference(query, cn);
+			
+		} else {
+			
+			reference = GameFunction.findFromContainer(query, container, cn);
+			
+		}
 		
 		if (reference == null) {
 			
 			if (container == null) {
-			
-				if (cn != null) {
 				
-					cn.println("You see no '" + query + "' here.");
-				
-				}
+				cn.println("You see no '" + query + "' here.");
 			
 			} else {
 				
-				if (cn != null) {
-				
-					cn.println("You see no '" + query + "' inside " + container.getShortDesc() + ".");
-					
-				}
+				cn.println("You see no '" + query + "' inside " + container.getShortDesc() + ".");
 				
 			}
 			
-		} else if (cn.getShell().getInventory().contains(reference)) {
+		} else if (cn.getShell().hasEntity(reference)) {
 			
-			if (cn != null) {
-			
-				cn.println("You're already holding " + reference.getShortDesc() + "!");
-			
-			}
+			cn.println("You're already holding " + reference.getShortDesc() + "!");
 			
 		} else if (cn.getShell() == reference) {
 			
-			if (cn != null) {
-			
-				cn.println("No matter how enamored, you are incapable of picking yourself up.");
-			
-			}
+			cn.println("No matter how enamored, you are incapable of picking yourself up.");
 			
 		} else {
+			
+			if (!(reference instanceof TakableEntity)) {
+				
+				cn.println("You cannot pick up " + reference.getShortDesc() + ".");
+				return;
+				
+			}
 			
 			if (container == null) {
 			
 				if (!query.equals(reference.getName())) {
-					
-					if (cn != null) {
 				
-						cn.println("(picking up " + reference.getName() + ")");
-					
-					}
+					cn.println("(picking up " + reference.getName() + ")");
 				
 				}
-				
-				if (cn != null) {
 			
-					cn.println("You pick up " + reference.getShortDesc() + ".");
+				cn.println("You pick up " + reference.getShortDesc() + ".");
 				
-				}
-				
-				GameFunction.roomMsg(mobile.getRoom(), mobile.getName() + " picks up " + reference.getShortDesc() + ".", cn);
+				GameFunction.roomMsg(shell.getRoom(), shell.getName() + " picks up " + reference.getShortDesc() + ".", cn);
 			
-				mobile.getRoom().removeEntity(reference);
+				shell.getRoom().removeEntity(reference);
 			
-				mobile.addEntity(reference);
+				shell.addEntity((TakableEntity)reference);
 			
 			} else {
 				
 				if (!query.equals(reference.getName()) || !indirect.equals(container.getName())) {
 					
-					if (cn != null) {
-					
-						cn.println("(removing " + reference.getName() + " from " + container.getName() + ")");
-					
-					}
+					cn.println("(removing " + reference.getName() + " from " + container.getName() + ")");
 					
 				}
 				
-				if (cn != null) {
+				cn.println("You remove " + reference.getShortDesc() + " from " + container.getShortDesc() + ".");
 				
-					cn.println("You remove " + reference.getShortDesc() + " from " + container.getShortDesc() + ".");
+				GameFunction.roomMsg(shell.getRoom(), shell.getName() + " removes " + reference.getShortDesc() + " from " + container.getShortDesc() + ".", cn);
 				
-				}
+				container.removeEntity((TakableEntity)reference);
 				
-				GameFunction.roomMsg(mobile.getRoom(), mobile.getName() + " removes " + reference.getShortDesc() + " from " + container.getShortDesc() + ".", cn);
-				
-				container.removeEntity(reference);
-				
-				mobile.addEntity(reference);
+				shell.addEntity((TakableEntity)reference);
 				
 			}
 			
@@ -594,9 +572,9 @@ public class IngameParser {
 		
 	}
 	
-	public static void drop (String[] input, Mobile mobile) {
+	public static void drop (String[] input, Shell shell) {
 		
-		ConnectNode cn = mobile.getConnectNode();
+		ConnectNode cn = shell.getConnectNode();
 		
 		String query = input[1].toLowerCase();
 		
@@ -604,33 +582,21 @@ public class IngameParser {
 		
 		if (reference == null) {
 			
-			if (cn != null) {
-			
-				cn.println("You're not holding a '" + query + "'.");
-				
-			}
+			cn.println("You're not holding a '" + query + "'.");
 			
 		} else {
 			
 			if (!query.equals(reference.getName())) {
 				
-				if (cn != null) {
-				
-					cn.println("(dropping " + reference.getName() + ")");
-				
-				}
+				cn.println("(dropping " + reference.getName() + ")");
 				
 			}
 			
-			if (cn != null) {
+			cn.println("You drop " + reference.getShortDesc() + ".");
 			
-				cn.println("You drop " + reference.getShortDesc() + ".");
+			Room<?> room = shell.getRoom();
 			
-			}
-			
-			Room room = mobile.getRoom();
-			
-			GameFunction.roomMsg(room, mobile.getShortDesc() + " drops " + reference.getShortDesc() + ".", cn);
+			GameFunction.roomMsg(room, shell.getShortDesc() + " drops " + reference.getShortDesc() + ".", cn);
 			
 			room.addEntity(reference);
 			
@@ -640,22 +606,19 @@ public class IngameParser {
 		
 	}
 	
-	public static void put(String[] input, Mobile mobile) {
+	@SuppressWarnings("unchecked")
+	public static <T extends TakableEntity> void put(String[] input, Shell shell) {
 
-		ConnectNode cn = mobile.getConnectNode();
+		ConnectNode cn = shell.getConnectNode();
 		
 		String query = null;
 		String indirect = null;
-		Entity container1 = null;
-		Container container2 = null;
+		Entity containerCheck = null;
+		Container<T> container = null;
 
 		if (input.length < 4) {
-			
-			if (cn != null) {
 
-				cn.println("Syntax: PUT <item> IN <container>.");
-			
-			}
+			cn.println("Syntax: PUT <item> IN <container>.");
 			
 			return;
 
@@ -667,77 +630,65 @@ public class IngameParser {
 
 				indirect = input[3].toLowerCase();
 
-				container1 = GameFunction.findFromInventory(indirect, cn);
+				containerCheck = GameFunction.findFromInventory(indirect, cn);
 
-				container1 = container1 == null ? GameFunction.findFromReference(indirect, cn) : container1;
+				if (containerCheck == null) {
+					
+					containerCheck = GameFunction.findFromReference(indirect, cn);
+					
+				}
 
 			}
 
 		}
 
-		Entity object = GameFunction.findFromInventory(query, cn);
+		TakableEntity object = GameFunction.findFromInventory(query, cn);
 
 		if (object == null) {
-
-			if (cn != null) {
 			
-				cn.println("You have no '" + query + "'.");
-			
-			}
+			cn.println("You have no '" + query + "'.");
 			
 			return;
 
 		}
 		
-		if (container1 == null) {
-
-			if (cn != null) {
+		if (containerCheck == null) {
 			
-				cn.println("You see no '" + indirect + "' here.");
-			
-			}
+			cn.println("You see no '" + indirect + "' here.");
 					
 			return;
 
 		}
 		
-		if (!(container1 instanceof Container)) {
+		if (!(containerCheck instanceof Container)) {
 			
-			if (cn != null) {
-			
-				cn.println("You cannot put anything into " + container1.getShortDesc() + ".");
-			
-			}
+			cn.println("You cannot put anything into " + containerCheck.getShortDesc() + ".");
 			
 			return;
 			
 		} else {
 			
-			container2 = (Container)container1;
+			container = (Container<T>)containerCheck;
 			
 		}
 		
-		if (object == container2) {
+		if (object == container) {
 			
-			if (cn != null) {
-			
-				cn.println("Unfortunately, this endeavor is constrained by Euclidean geometry.");
-			
-			}
+			cn.println("Unfortunately, this endeavor is constrained by Euclidean geometry.");
 			
 			return;
 			
 		}
 
-		if (container2.getTypes() != null) {
+		if (container.getTypes() != null) {
 
-			if (!container2.getTypes()[0].equals("any")) {
+			if (!container.getTypes()[0].equals("any")) {
 
 				boolean found = false;
 
 				for (String ref : object.getReferences()) {
 
-					for (String q : container2.getTypes()) {
+					for (String q : container.getTypes()) {
 
 						if (q.toLowerCase().equals(ref.toLowerCase())) {
 
@@ -755,12 +706,8 @@ public class IngameParser {
 				}
 
 				if (!found) {
-					
-					if (cn != null) {
 
-						cn.println("You find that " + container2.getShortDesc() + " cannot hold " + object.getShortDesc() + ".");
-					
-					}
+					cn.println("You find that " + container.getShortDesc() + " cannot hold " + object.getShortDesc() + ".");
 					
 					return;
 
@@ -770,71 +717,45 @@ public class IngameParser {
 
 		}
 
-		if ((container2.getWeightCarried() + object.getWeight()) > container2.getMaxWeight()) {
-
-			if (cn != null) {
+		if ((container.getWeightCarried() + object.getWeight()) > container.getMaxWeight()) {
 			
-				cn.println("It seems that " + container2.getShortDesc() + " cannot hold any more weight.");
-			
-			}
+			cn.println("It seems that " + container.getShortDesc() + " cannot hold any more weight.");
 			
 			return;
 
 		} else {
-
-			if (cn != null) {
 			
-				cn.println("You put " + object.getShortDesc() + " into " + container2.getShortDesc() + ".");
+			cn.println("You put " + object.getShortDesc() + " into " + container.getShortDesc() + ".");
 			
-			}
-			
-			GameFunction.roomMsg(mobile.getRoom(), mobile.getShortDesc() + " puts " + object.getShortDesc() + " into " + container2.getShortDesc() + ".", cn);
-			mobile.removeEntity(object);
-			container2.addEntity(object);
+			GameFunction.roomMsg(shell.getRoom(), shell.getShortDesc() + " puts " + object.getShortDesc() + " into " + container.getShortDesc() + ".", cn);
+			shell.removeEntity(object);
+			container.addEntity((T)object);
 
 		}
 
 
-	}
-	
-	public static void who(ConnectNode cn) {
-		
-		synchronized (Omnimud.playerlock) {
-		
-			cn.println("Currently connected:");
-			
-			for (ConnectNode node : Omnimud.players) {
-				
-				cn.println(node.getShell().getName());
-				
-			}
-			
-			cn.println(Omnimud.players.size() + " players are connected.");
-		
-		}
-		
 	}
 	
 	public static void go(String[] input, ConnectNode cn) {
 		
-		Mobile mobile = cn.getShell();
+		Shell shell = cn.getShell();
 		
 		int Xcoor = Integer.parseInt(input[0]);
 		int Ycoor = Integer.parseInt(input[1]);
 		
 		Coordinates coors = new Coordinates(Xcoor, Ycoor);
 		
-		Room destination = mobile.getArea().getRoom(coors);
+		Room<?> destination = shell.getArea().getRoom(coors);
 		
 		if (destination != null) {
 			
-			GameFunction.roomMsg(mobile.getRoom(), mobile.getName() + " leaves to the ether.", cn);
+			GameFunction.roomMsg(shell.getRoom(), shell.getName() + " leaves to the ether.", cn);
 
-			mobile.setRoom(destination);
+			shell.setRoom(destination);
 
-			GameFunction.roomMsg(mobile.getRoom(), mobile.getName() + " arrives from the ether.", cn);
+			GameFunction.roomMsg(shell.getRoom(), shell.getName() + " arrives from the ether.", cn);
 
-			look(mobile);
+			look(shell);
 			
 		} else {
 			
@@ -844,18 +765,18 @@ public class IngameParser {
 		
 	}
 	
-	public static void enter(Mobile mobile) {
+	public static void enter(Shell shell) {
 		
-		ConnectNode cn = mobile.getConnectNode();
+		ConnectNode cn = shell.getConnectNode();
 		
-		if (!mobile.hasMoveBalance()) {
+		if (!shell.hasMoveBalance()) {
 			
 			cn.println("You can't move that quickly.");
 			return;
 			
 		}
 		
-		Room room = mobile.getRoom();
+		Room<?> room = shell.getRoom();
 			
 		Feature feature = room.getFeature();
 			
@@ -869,53 +790,46 @@ public class IngameParser {
 			
 			cn.println("You enter " + building.getShortDesc() + ".");
 			
-			mobile.setRoom(building.getOrigin());
+			shell.setRoom(building.getOrigin());
 				
-			mobile.takeMoveBalance(mobile.getMoveSpeed(), false);
+			shell.takeMoveBalance(shell.getMoveSpeed(), false);
 			
-			cn.print(mobile.getRoom().printRoom(mobile));
+			cn.print(shell.getRoom().printRoom(shell));
 				
 		}
 		
 	}
 	
-	public static void leave(Mobile mobile) {
+	public static void leave(Shell shell) {
 		
-		ConnectNode cn = mobile.getConnectNode();
+		ConnectNode cn = shell.getConnectNode();
 		
-		if (!mobile.hasMoveBalance()) {
+		if (!shell.hasMoveBalance()) {
 			
 			cn.println("You can't move that quickly.");
 			return;
 			
 		}
 		
-		Room room = mobile.getRoom();
+		Room<?> room = shell.getRoom();
 		
-		Area area = mobile.getArea();
+		if (room instanceof BuildingRoom) {
 		
-		if (area == null) {
+			BuildingRoom br = (BuildingRoom)room;
 			
-			cn.println("You can't leave from this point.");
-			return;
+			BuildingArea ba = (BuildingArea)room.getArea();
 			
-		}
-		
-		if (area instanceof BuildingArea) {
-		
-			BuildingArea ba = (BuildingArea)area;
-			
-			if (room == area.getOrigin()) {
+			if (br.isOrigin()) {
 				
 				Building building = ba.getBuilding();
 				
 				cn.println("You leave " + building.getShortDesc() + ".");
 				
-				mobile.setRoom(building.getParentRoom());
+				shell.setRoom(building.getParentRoom());
 				
-				mobile.takeMoveBalance(mobile.getMoveSpeed(), false);
+				shell.takeMoveBalance(shell.getMoveSpeed(), false);
 				
-				cn.print(mobile.getRoom().printRoom(mobile));
+				cn.print(shell.getRoom().printRoom(shell));
 				
 				return;
 				
@@ -963,9 +877,25 @@ public class IngameParser {
     	
     }
     
-    public static void attack(Mobile mobile, String[] input, Attack attack) {
+    public static void body(Shell shell) {
     	
-    	ConnectNode cn = mobile.getConnectNode();
+    	ConnectNode cn = shell.getConnectNode();
+    	
+    	Iterator<Appendage> parts = shell.getBody().getParts();
+    	
+    	while (parts.hasNext()) {
+    		
+    		Appendage a = parts.next();
+    		
+    		cn.println(a.toString());
+    		
+    	}
+    	
+    }
+    
+    public static void attack(Shell shell, String[] input, Attack attack) {
+    	
+    	ConnectNode cn = shell.getConnectNode();
     	
 	    Entity target = GameFunction.findFromReference(input[0], cn);
 	    	
@@ -973,28 +903,20 @@ public class IngameParser {
 	    	
 	    	if (target instanceof Mobile) {
 	    			
-	    		attack.attackUse(mobile, (Mobile)target);
+	    		attack.attackUse(shell, (Mobile)target);
 	    		return;
 	    		
 	    	} else {
-	    		
-	    		if (cn != null) {
 	    			
-	    			cn.println("You can't attack that.");
-	    		
-	    		}
+	    		cn.println("You can't attack that.");
 	    		
 	    		return;
 	    			
 	    	}
 	    	
 	    } else {
-	    		
-	    	if (cn != null) {
-	    	
-	    		cn.println("You can't see that here.");
-	    	
-	    	}
+
+	    	cn.println("You can't see that here.");
 	    	
 	    	return;
 	    		
@@ -1002,11 +924,11 @@ public class IngameParser {
     	
     }
     
-    public static void newRoom(String[] command, Mobile mobile) {
+    public static void newRoom(String[] command, Shell shell) {
     	
-    	ConnectNode cn = mobile.getConnectNode();
+    	ConnectNode cn = shell.getConnectNode();
     	
-    	Room room = mobile.getRoom();
+    	Room<?> room = shell.getRoom();
     	
     	String check = command[0].toLowerCase();
     	
@@ -1014,9 +936,11 @@ public class IngameParser {
     		
     		if (check.equals(dir.getName()) || check.equals(dir.getShortName())) {
     			
-    			Area area = room.getArea();
+    			Area<?> area = room.getArea();
     			
-    			Room destination = area.getRoom(new Coordinates(mobile.getCoordinates(), dir.getOffset()));
+    			Coordinates offset = new Coordinates(room.getCoordinates(), dir.getOffset());
+    			
+    			Room<?> destination = area.getRoom(offset);
     			
     			if (destination != null) {
     				
@@ -1037,16 +961,16 @@ public class IngameParser {
     	
     }
     
-    public static void findPath(String[] command, Mobile mobile) {
+    public static void findPath(String[] command, Shell shell) {
     	
-    	ConnectNode cn = mobile.getConnectNode();
+    	ConnectNode cn = shell.getConnectNode();
     	
     	int Xcoor = Integer.parseInt(command[0]);
     	int Ycoor = Integer.parseInt(command[1]);
     	
     	Coordinates coors = new Coordinates(Xcoor, Ycoor);
     	
-    	Room room = mobile.getArea().getRoom(coors);
+    	Room<?> room = shell.getArea().getRoom(coors);
     	
     	if (room == null) {
     		
@@ -1055,15 +979,11 @@ public class IngameParser {
     		
     	}
     	
-    	ArrayList<Direction> path = GameFunction.findPath(mobile, room);
+    	ArrayList<Direction> path = GameFunction.findPath(shell, room);
     	
     	if (path == null) {
     		
-    		if (cn != null) {
-    		
-    			cn.println("No path found.");
-    		
-    		}
+    		cn.println("No path found.");
     		
     		return;
     		
@@ -1071,37 +991,29 @@ public class IngameParser {
     	
     	if (path.size() == 0) {
     		
-    		if (cn != null) {
-    		
-    			cn.println("You're already there.");
-    		
-    		}
+    		cn.println("You're already there.");
     		
     		return;
     		
     	}
     	
-    	if (cn != null) {
-    	
-    		cn.print("Path: ");
+    	cn.print("Path: ");
     		
-	    	for (int i = 0; i < path.size(); i++) {
+	    for (int i = 0; i < path.size(); i++) {
 	    		
-	    		cn.print(path.get(i).getShortName());
+	    	cn.print(path.get(i).getShortName());
 	    		
-	    		if (i + 1 < path.size()) {
+	    	if (i + 1 < path.size()) {
 	    			
-	    			cn.print(", ");
-	    			
-	    		}
+	    		cn.print(", ");
 	    		
 	    	}
+	    		
+	    }
 	    	
-	    	cn.println();
+	    cn.println();
     	
-    	}
-    	
-    	mobile.setTravelCommand(path, 0);
+    	shell.setTravelCommand(path, 0);
     	
     }
 	
@@ -1109,7 +1021,7 @@ public class IngameParser {
 		
 		System.out.println("Shutting down server.");
         cn.println("Server shutting down. Have a nice day!");
-		cn.cleanup();
+		Omnimud.cleanup(cn);
 		Omnimud.shutdown();
 		
 	}

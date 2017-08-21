@@ -1,5 +1,7 @@
 package omnimudplus;
 
+import omnimudplus.Geography.Direction;
+
 public enum CompassAngle {
 	
 	// X-axis right

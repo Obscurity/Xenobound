@@ -2,6 +2,12 @@ package omnimudplus;
 
 import java.util.Arrays;
 
+import com.orientechnologies.orient.core.record.impl.ODocument;
+
+import omnimudplus.Account.Account;
+import omnimudplus.Account.TempAccount;
+import omnimudplus.Database.Database;
+
 public class ConnectionParser {
 	
 	public static void parse(String[] command, ConnectNode cn) {
@@ -20,27 +26,39 @@ public class ConnectionParser {
 			
 			try {
 				
-				Account account = AccountService.getAccount(command[0]);
-				
-				if (account == null && cn.getAccount() == null) {
+				if (cn.getAccount() == null) {
 					
-					cn.println("No existing account by that name.\n");
-					return;
+					ODocument accountDoc = Database.retrieveAccount(command[0]);
 					
-				} else if (cn.getAccount() == null) {
-				
-					cn.setAccount(account);
-					return;
+					if (accountDoc != null) {
+						
+						TempAccount account = new TempAccount(command[0]);
+						
+						account.setPotential(accountDoc.field("potential"));
+						
+						account.setPassword(accountDoc.field("password"));
+						
+						account.setSalt(accountDoc.field("salt"));
+						
+						cn.setAccount(account);
+						
+						
+					} else {
 					
-				} else if (cn.getAccount() != null) {
+						cn.println("No existing account by that name.\n");
+						return;
+						
+					}
 					
-					account = cn.getAccount();
+				} else if (cn.getAccount() instanceof TempAccount) {
 					
-					byte[] salt = AccountService.recoverSalt(account);
+					TempAccount account = (TempAccount)cn.getAccount();
 					
-					byte[] password = AccountService.getEncryptedPassword(command[0], salt);
+					byte[] salt = account.getSalt();
 					
-					byte[] storedpass = AccountService.recoverEncryptedPassword(account);
+					byte[] password = Database.getEncryptedPassword(command[0], salt);
+					
+					byte[] storedpass = account.getPassword();
 					
 					if (Arrays.equals(password, storedpass)) {
 						
@@ -48,7 +66,12 @@ public class ConnectionParser {
 						
 						cn.setConnectState(ConnectionState.ACCOUNT);
 						
-						cn.setAccount(account);
+						Account acc =
+								Account.reconstructAccount(
+										Database.retrieveAccount(account.getName())
+										);
+						
+						cn.setAccount(acc);
 						
 						return;
 						
@@ -70,9 +93,9 @@ public class ConnectionParser {
 				
 			}
 			
-			switch (command[0].toLowerCase()) {
+			/* switch (command[0].toLowerCase()) {
 				default: cn.println("Invalid selection.\n"); break;
-			}
+			} */
 			
 		}
 		
@@ -92,7 +115,7 @@ public class ConnectionParser {
 		
 		cn.println("Goodbye!");
 		
-		cn.cleanup();
+		Omnimud.cleanup(cn);
 		
 	}
 

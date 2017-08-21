@@ -1,51 +1,56 @@
 package omnimudplus.Entities;
 import java.io.*;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 
-import omnimudplus.Area;
-import omnimudplus.Coordinates;
 import omnimudplus.LockObject;
-import omnimudplus.Material;
-import omnimudplus.Pronouns;
-import omnimudplus.Room;
+import omnimudplus.Geography.Area;
+import omnimudplus.Geography.Coordinates;
+import omnimudplus.Geography.Room;
 
-public class Entity implements Serializable {
+public abstract class Entity implements Serializable {
 
-	protected final LockObject descLock = new LockObject();
+	private final LockObject descLock = new LockObject();
 
-	protected String name; /* The name of the entity. */
+	private String name; /* The name of the entity. */
 
-	protected String[] aliases; /* The aliases the entity can be referenced by. Cannot be left blank. */
+	private LinkedHashSet<String> aliases; /* The aliases the entity can be referenced by. Cannot be left blank. */
 
-	protected String shortDesc; /* A short description of the entity - 'a short sword', 'a tall man' */
+	private String shortDesc; /* A short description of the entity - 'a short sword', 'a tall man' */
 
-	protected String roomDesc; /* As it appears in a room - 'A short sword lies here.', 'A tall man stands here.' */
+	private String roomDesc; /* As it appears in a room - 'A short sword lies here.', 'A tall man stands here.' */
 
-	protected String longDesc; /* The description yielded upon closer examination. 'This short sword is sharp.', 'This man really is very tall.' */
+	private String longDesc; /* The description yielded upon closer examination. 'This short sword is sharp.', 'This man really is very tall.' */
 
-	protected final LockObject propertyLock = new LockObject();
+	private final LockObject propertyLock = new LockObject();
 
-	protected int weight; /* Weight in grams. 0 is effectively weightless, or close to. */
+	private int weight; /* Weight in grams. 0 is effectively weightless, or close to. */
 	
-	protected Pronouns pronouns = Pronouns.IT;
+	private Pronouns pronouns = Pronouns.IT;
 	
-	protected Material material;
+	private Material material;
+	
+	private Size size;
+	
+	private int durability;
+	
+	private int maxDurability;
 	
 	static final private long serialVersionUID = 1L;
 	
-	protected Coordinates coors;
+	private Room<?> room = null;
 	
-	protected Room room = null;
-	
-	protected Area area = null;
+	private Area<?> area = null;
 
 	public Entity() {
 
 		name = "entity";
 		
-		aliases = new String[] {"object", "thing"};
+		aliases = new LinkedHashSet<String>();
 
+		aliases.add("object");
+		
+		aliases.add("thing");
+		
 		shortDesc = "an entity";
 
 		roomDesc = "An uninitialized entity is here.";
@@ -54,15 +59,26 @@ public class Entity implements Serializable {
 
 		weight = 1;
 		
-		material = Material.UNDEFINED;
+		setMaterial(Material.UNDEFINED);
+		
+		setSize(Size.FINE);
+		
+		initDurability();
 
 	}
 
-	public Entity(String name, String[] aliases, String shortDesc, String roomDesc, String longDesc, int weight, Material material) {
+	public Entity(String name, String[] aliases, String shortDesc, String roomDesc,
+			String longDesc, int weight, Material material, Pronouns pronouns, Size size) {
 
 		this.name = name;
 
-		this.aliases = aliases;
+		this.aliases = new LinkedHashSet<String>();
+		
+		for (String s : aliases) {
+			
+			this.aliases.add(s);
+			
+		}
 
 		this.shortDesc = shortDesc;
 
@@ -72,8 +88,14 @@ public class Entity implements Serializable {
 
 		this.weight = weight;
 		
-		this.material = material;
+		setMaterial(material);
+		
+		this.pronouns = pronouns;
 
+		setSize(size);
+		
+		initDurability();
+		
 	}
 
 	public String getName() {
@@ -96,7 +118,7 @@ public class Entity implements Serializable {
 
 	}
 
-	public String[] getAliases() {
+	public LinkedHashSet<String> getAliases() {
 
 		synchronized (descLock) {
 
@@ -105,32 +127,45 @@ public class Entity implements Serializable {
 		}
 
 	}
-
+	
 	public void setAliases(String[] aliases) {
+		
+		synchronized (descLock) {
+			
+			this.aliases = new LinkedHashSet<String>();
+			
+			for (String s : aliases) {
+				
+				this.aliases.add(s);
+				
+			}
+			
+		}
+		
+	}
+
+	public void setAliases(LinkedHashSet<String> aliases) {
 
 		synchronized (descLock) {
-
+			
 			this.aliases = aliases;
 
 		}
 
 	}
 
-	public String[] getReferences() {
+	public LinkedHashSet<String> getReferences() {
 
 		synchronized (descLock) { 
 
-			String[] references = new String[aliases.length + 1];
-
-			references[0] = this.name;
-
-			for (int i = 1; i < references.length; i++) {
-
-				references[i] = aliases[i - 1];
-
-			}
-
-			return references;
+			@SuppressWarnings("unchecked")
+			LinkedHashSet<String> temp = new LinkedHashSet<String>();
+			
+			temp.add(name);
+			
+			temp.addAll(aliases);
+			
+			return temp;
 			
 		}
 
@@ -216,32 +251,24 @@ public class Entity implements Serializable {
 
 	}
 	
-	public Coordinates getCoordinates() {
+	public void setRoom(Room<?> room) {
 		
-		return coors;
+		synchronized (propertyLock) {
 		
-	}
-	
-	public void setCoordinates(Coordinates coors) {
-		
-		this.coors = coors;
-		
-	}
-	
-	public void setRoom(Room room) {
-		
-		if (this.room != null) {
+			if (this.room != null) {
+				
+				this.room.removeEntity(this);
+				
+			}
 			
-			this.room.removeEntity(this);
+			this.room = room;
 			
-		}
+			if (this.room != null) {
+				
+				this.room.addEntity(this);
+				
+			}
 		
-		this.room = room;
-		
-		if (this.room != null) {
-			
-			this.room.addEntity(this);
-			
 		}
 		
 	}
@@ -258,44 +285,167 @@ public class Entity implements Serializable {
 	
 	public Pronouns getPronouns() {
 		
-		return pronouns;
+		synchronized (propertyLock) {
 		
-	}
-	
-	public Room getRoom() {
+			return pronouns;
 		
-		return room;
-		
-	}
-	
-	public Area getArea() {
-		
-		return area;
-		
-	}
-	
-	public void setArea(Area area) {
-		
-		if (this.area != null) {
-			
-			this.area.removeEntity(this);
-			
 		}
 		
-		this.area = area;
+	}
+	
+	public Room<?> getRoom() {
 		
-		if (this.area != null) {
+		synchronized (propertyLock) {
+		
+			return room;
+		
+		}
+		
+	}
+	
+	public Area<?> getArea() {
+		
+		synchronized (propertyLock) {
+		
+			if (room == null) { return null; }
 			
-			this.area.addEntity(this);
-			
+			return room.getArea();
+		
 		}
 		
 	}
 
 	public String toString() {
 
-		return "name: " + name + "\naliases: " + aliases + "\nshortDesc: " + shortDesc + "\nroomDesc: " + roomDesc + "\nlongDesc: " + longDesc;
+		synchronized (propertyLock) {
+		
+			return "name: " + name + "\naliases: " + aliases + "\nshortDesc: "
+			+ shortDesc + "\nroomDesc: " + roomDesc + "\nlongDesc: " + longDesc;
 
+		}
+		
+	}
+
+	public Material getMaterial() {
+		
+		synchronized (propertyLock) {
+		
+			return material;
+		
+		}
+		
+	}
+
+	public void setMaterial(Material material) {
+		
+		synchronized (propertyLock) {
+		
+			this.material = material;
+		
+		}
+		
+	}
+
+	public Size getSize() {
+		
+		synchronized (propertyLock) {
+		
+			return size;
+		
+		}
+		
+	}
+
+	public void setSize(Size size) {
+		
+		synchronized (propertyLock) {
+		
+			this.size = size;
+		
+		}
+		
+	}
+	
+	protected void initDurability() {
+		
+		synchronized (propertyLock) {
+		
+			int differential = getSize().getDifferential();
+			
+			setWeight(differential);
+			this.durability = (int)(differential*getMaterial().getDurability());
+			this.maxDurability = (int)(differential*getMaterial().getDurability());
+		
+		}
+		
+	}
+	
+	protected void setDurability(int durability) {
+		this.durability = durability;
+	}
+	
+	public void addDurability(int offset) {
+		
+		synchronized (propertyLock) {
+		
+			durability+=offset;
+			if (durability > maxDurability) {
+				durability = maxDurability;
+			}
+		
+		}
+		
+	}
+	
+	public void removeDurability(int offset) {
+		
+		synchronized (propertyLock) {
+		
+			durability-=offset;
+			if (durability < 0) {
+				durability = 0;
+			}
+		
+		}
+		
+	}
+	
+	public boolean isDamaged() {
+		
+		synchronized (propertyLock) {
+		
+			if (durability < maxDurability) {
+				return true;
+			}
+			return false;
+		
+		}
+		
+	}
+	
+	public int getDurability() {
+		return durability;
+	}
+	
+	public int getMaxDurability() {
+		return maxDurability;
+	}
+	
+	protected void setMaxDurability(int maxDurability) {
+		this.maxDurability = maxDurability;
+	}
+	
+	public boolean isBroken() {
+	
+		synchronized (propertyLock) {
+			
+			if (durability == 0) {
+				return true;
+			}
+			return false;
+		
+		}
+		
 	}
 
 }

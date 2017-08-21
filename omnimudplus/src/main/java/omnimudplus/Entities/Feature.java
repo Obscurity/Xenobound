@@ -1,61 +1,45 @@
 package omnimudplus.Entities;
 
-import omnimudplus.Material;
-import omnimudplus.Room;
+import omnimudplus.Geography.Room;
 
-public class Feature extends Entity {
+public abstract class Feature extends Entity {
 	
 	static final private long serialVersionUID = 1L;
 	
-	protected Room parentRoom;
+	protected Room<?> parentRoom;
 
-	public Room getParentRoom() {
+	public Room<?> getParentRoom() {
 		return parentRoom;
 	}
 
-	public void setParentRoom(Room parentRoom) {
+	public void setParentRoom(Room<?> parentRoom) {
 		
 		// Making sure we aren't putting a feature in more than one room.
 		
 		this.parentRoom = parentRoom;
-		
-		this.setArea(parentRoom.getArea());
 
 	}
-
+	
 	public Feature() {
-
-		name = "feature";
 		
-		aliases = new String[] {"object", "thing"};
+		super("feature", new String[] {"object", "thing"}, "a feature",
+				"An uninitialized feature is here.",
+				"This feature is uninitialized, and this is probably an issue.",
+				1, Material.UNDEFINED, Pronouns.IT, Size.LARGE);
 
-		shortDesc = "a feature";
+	}
+	
+	public Feature(String name, String[] aliases, String shortDesc, String roomDesc, String longDesc,
+			int weight, Material material) {
 
-		roomDesc = "An uninitialized feature is here.";
-
-		longDesc = "This feature is uninitialized, and this is probably an issue.";
-
-		weight = 1;
-		
-		material = Material.UNDEFINED;
+		super(name, aliases, shortDesc, roomDesc, longDesc, weight, material, Pronouns.IT, Size.HUGE);
 
 	}
 
-	public Feature(String name, String[] aliases, String shortDesc, String roomDesc, String longDesc, int weight, Material material) {
+	public Feature(String name, String[] aliases, String shortDesc, String roomDesc, String longDesc,
+			int weight, Material material, Size size) {
 
-		this.name = name;
-
-		this.aliases = aliases;
-
-		this.shortDesc = shortDesc;
-
-		this.roomDesc = roomDesc;
-
-		this.longDesc = longDesc;
-
-		this.weight = weight;
-		
-		this.material = material;
+		super(name, aliases, shortDesc, roomDesc, longDesc, weight, material, Pronouns.IT, size);
 
 	}
 	

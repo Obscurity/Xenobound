@@ -1,12 +1,10 @@
 package omnimudplus.Entities;
 
-import omnimudplus.Material;
-
 // A unit is a versatile, standard crafting unit. '1 unit', in game lore,
 // will never, ever be quantified beyond the point of 'it's enough to do
 // this.'
 
-public class Unit extends Entity {
+public class Unit extends Commodity {
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -33,9 +31,7 @@ public class Unit extends Entity {
 		
 	}
 	
-	public Material getMaterial() {
-		
-		return material;
+	public Unit(Material material, Species species) {
 		
 	}
 	

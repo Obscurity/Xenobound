@@ -1,43 +1,68 @@
 package omnimudplus;
 
+import java.util.Iterator;
 import java.util.Random;
 
+import omnimudplus.Effects.Effect;
 import omnimudplus.Effects.EffectType;
+import omnimudplus.Effects.Magnitude;
+import omnimudplus.Effects.Mechanic;
 import omnimudplus.Entities.Mobile;
+import omnimudplus.Entities.Pronouns;
+import omnimudplus.Entities.Shell;
 
 public enum Attack {
 	
+	// Reference for the strings
+	// Actual Names
+	// <caster>, <target>
+	// Subject pronouns (He/She/They etc)
+	// <csubj>, <tsubj>
+	// Object pronouns (Him/Her/Them etc)
+	// <cobj>, <tobj>
+	// Possessive Adjectives (His/Her/Their etc)
+	// <cpadj>, <tpadj>
+	// Possessive Pronouns (His/Hers/Theirs etc)
+	// <cppro>, <tppro>
+	// Reflexive Pronouns (Himself/Herself/Themself etc)
+	// <crefl>, <trefl>
+	
 	PUNCH("punch",
 			// 1p
-			"You punch <target> very hard, sending <targetobj> staggering.",
+			"You punch <target> very hard, sending <tobj> staggering.",
 			// 2p
 			"<caster> punches you very hard, sending you staggering.",
 			// 3p singular
-			"<caster> punches <target> very hard, sending <targetobj> staggering.",
+			"<caster> punches <target> very hard, sending <tobj> staggering.",
 			// 3p plural
-			"<caster> punches <target> very hard, sending <targetobj> staggering.",
+			"<caster> punches <target> very hard, sending <tobj> staggering.",
 			// 1p reflexive
 			"You punch yourself very hard.",
 			// 3p reflexive
-			"<caster> punches <casterreflexive> very hard.",
-			// Delay, Range, EffectType, Cost, Damage, Variance
-			2000, 1, EffectType.BLUNT, 0, 2, 2),
+			"<caster> punches <crefl> very hard.",
+			// Delay, Ranged, Cost, Effect
+			2000, false, 0,
+					new Effect(EffectType.PHYSICAL,
+					new Mechanic[] {},
+					new Magnitude(),
+					new Magnitude())
+			),
 	
 	FIREBALL("fireball",
 			// 1p
-			"You hurl a fireball at <target>, burning <targetobj>.",
+			"You hurl a fireball at <target>, burning <tobj>.",
 			// 2p
 			"<caster> hurls a fireball at you, burning you.",
 			// 3p singular
-			"<caster> hurls a fireball at <target>, burning <targetobj>.",
+			"<caster> hurls a fireball at <target>, burning <tobj>.",
 			// 3p plural
-			"<caster> hurls a fireball at <target>, burning <targetobj>.",
+			"<caster> hurls a fireball at <target>, burning <tobj>.",
 			// 1p reflexive
 			"You hurl a fireball at yourself.",
 			// 3p reflexive
-			"<caster> hurls a fireball at <casterreflexive>.",
-			// Delay, Range, EffectType, Cost, Damage, Variance
-			4000, 10, EffectType.HEAT, 1, 1, 2);
+			"<caster> hurls a fireball at <crefl>.",
+			// Delay, Ranged, Cost, Effect
+			4000, true, 1, new Effect());
 	
 	private final LockObject messageLock = new LockObject();
 	
@@ -59,21 +84,16 @@ public enum Attack {
 	
 	private int actionTime;
 	
-	private int range;
-	
-	private EffectType damageType;
+	private boolean ranged;
 	
 	private int nrsCost;
 	
-	private int damage;
-	
-	private int variance;
+	private Effect effect;
 	
 	private Attack(String name, String firstPersonMessage, String secondPersonMessage,
 			String thirdPersonSingularMessage, String thirdPersonPluralMessage,
 			String firstPersonReflexive, String thirdPersonReflexive,
-			int actionTime, int range, EffectType damageType, int nrsCost,
-			int damage, int variance) {
+			int actionTime, boolean ranged, int nrsCost, Effect effect) {
 		
 		this.name = name;
 		this.firstPersonMessage = firstPersonMessage;
@@ -83,11 +103,9 @@ public enum Attack {
 		this.firstPersonReflexive = firstPersonReflexive;
 		this.thirdPersonReflexive = thirdPersonReflexive;
 		this.actionTime = actionTime;
-		this.range = range;
-		this.damageType = damageType;
+		this.ranged = ranged;
 		this.nrsCost = nrsCost;
-		this.damage = damage;
-		this.variance = variance;
+		this.effect = effect;
 		
 	}
 	
@@ -111,11 +129,11 @@ public enum Attack {
 		
 	}
 	
-	public int getRange() {
+	public boolean getRanged() {
 		
 		synchronized (attackLock) {
 			
-			return range;
+			return ranged;
 			
 		}
 		
@@ -126,36 +144,6 @@ public enum Attack {
 		synchronized (attackLock) {
 			
 			return nrsCost;
-			
-		}
-		
-	}
-	
-	public EffectType getEffectType() {
-		
-		synchronized (attackLock) {
-		
-			return damageType;
-		
-		}
-		
-	}
-	
-	public int getDamage() {
-		
-		synchronized(attackLock) {
-			
-			return damage;
-			
-		}
-		
-	}
-	
-	public int getVariance() {
-		
-		synchronized(attackLock) {
-			
-			return variance;
 			
 		}
 		
@@ -204,7 +192,13 @@ public enum Attack {
 	
 	public void attackUse(Mobile mobile, Mobile target) {
 		
-		ConnectNode cn = mobile.getConnectNode();
+		ConnectNode cn = null;
+		
+		if (mobile instanceof Shell) {
+			
+			cn = ((Shell)mobile).getConnectNode();
+			
+		}
 		
 		if (!mobile.hasActionBalance()) {
 			
@@ -220,19 +214,16 @@ public enum Attack {
 		
 		Random rand = new Random();
 		
-		Area area = mobile.getArea();
-		
-		int tryrange = GameFunction.getApproximateDistance(mobile, target.getRoom());
-		
-		if (tryrange > range) {
+		if (ranged) {
 			
-			if (cn != null) {
+		} else {
 			
-				cn.println("Your target is not within range. (must be within <boldred>" + range + "<white> meters)");
-			
+			if (mobile.getRoom() != target.getRoom()) {
+				
+				cn.println("Your target is not within range.");
+				return;
+				
 			}
-			
-			return;
 			
 		}
 		
@@ -240,11 +231,13 @@ public enum Attack {
 		
 		cn.getShell().spendNrs(getNrsCost());
 		
-		target.takeDamage(damage + rand.nextInt(getVariance()));
+		target.applyEffect(effect);
 		
-		for (Mobile other : mobile.getRoom().getMobiles()) {
+		Iterator<Shell> shells = mobile.getRoom().getShells();
+		
+		while (shells.hasNext()) {
 			
-			ConnectNode witness = other.getConnectNode();
+			ConnectNode witness = shells.next().getConnectNode();
 			
 			if (witness == cn) {
 				

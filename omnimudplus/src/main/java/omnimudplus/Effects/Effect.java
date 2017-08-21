@@ -2,6 +2,8 @@ package omnimudplus.Effects;
 
 import omnimudplus.LockObject;
 
+// This is the standard effect class. It deals with simple, self-targeted effects.
+
 public class Effect {
 	
 	private final LockObject intLock = new LockObject();
@@ -10,39 +12,36 @@ public class Effect {
 	
 	private EffectType effectType;
 	
-	// Magnitude - how much damage something deals, how much health it recovers, etc etc.
-	
-	private int magnitude;
-	
-	// How many ticks does the effect last? 0 means it's one-off.
-	
-	private int duration;
-	
-	// How often it ticks, in milliseconds. 0 means no tick.
-	
-	private int tick;
-	
-	// Variance - how much the magnitude can and will vary.
-	
-	private int variance;
-	
-	// Okay, but what does it DO? Defense? Attack? Passive ability?
+	// Okay, but what does this thing actually do?
 	
 	private Mechanic[] mechanics;
 	
-	public Effect(EffectType effectType, int magnitude, int duration, int tick, int variance, Mechanic[] mechanics) {
+	// What is the magnitude of its duration?
+	
+	private Magnitude duration;
+	
+	// What is the magnitude of its value?
+	
+	private Magnitude magnitude;
+	
+	public Effect() {
+		
+		this.effectType = EffectType.NONE;
+		
+		this.mechanics = new Mechanic[] {Mechanic.DAMAGE};
+		
+	}
+	
+	public Effect(EffectType effectType, Mechanic[] mechanics,
+			Magnitude duration, Magnitude magnitude) {
 		
 		this.effectType = effectType;
 		
-		this.magnitude = magnitude;
+		this.mechanics = mechanics;
 		
 		this.duration = duration;
 		
-		this.tick = tick;
-		
-		this.variance = variance;
-		
-		this.mechanics = mechanics;
+		this.magnitude = magnitude;
 		
 	}
 	
@@ -61,45 +60,13 @@ public class Effect {
 		}
 		
 	}
-	
-	public int getDuration() {
-		
-		synchronized(intLock) {
-			
-			return duration;
-			
-		}
-		
+
+	public Magnitude getDuration() {
+		return duration;
 	}
-	
-	public int getTick() {
-		
-		synchronized(intLock) {
-			
-			return tick;
-			
-		}
-		
-	}
-	
-	public int getMagnitude() {
-		
-		synchronized(intLock) {
-			
-			return magnitude;
-			
-		}
-		
-	}
-	
-	public int getVariance() {
-		
-		synchronized(intLock) {
-			
-			return variance;
-			
-		}
-		
+
+	public Magnitude getMagnitude() {
+		return magnitude;
 	}
 
 }

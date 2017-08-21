@@ -26,7 +26,7 @@ public class EffectRunnable implements Runnable {
 			return;
 		} else {
 			ScheduledFuture<EffectRunnable> newrun = 
-					(ScheduledFuture<EffectRunnable>)Utilities.schedule(new EffectRunnable(duration, effect, mobile), effect.getTick(), TimeUnit.MILLISECONDS);
+					(ScheduledFuture<EffectRunnable>)Utilities.schedule(new EffectRunnable(duration, effect, mobile), 0, TimeUnit.MILLISECONDS);
 		}
 		
 	}

@@ -3,11 +3,9 @@ package omnimudplus.Entities;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import omnimudplus.Material;
-
 // Edible. The base template for food.
 
-public class Edible extends Entity {
+public class Edible extends TakableEntity {
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -21,7 +19,7 @@ public class Edible extends Entity {
 				"an undefined ration",
 				"An undefined ration lies here.",
 				"This ration is undefined.",
-				0, Material.UNDEFINED);
+				0, Material.UNDEFINED, Size.DIMINUTIVE);
 		
 	}
 	
@@ -31,7 +29,7 @@ public class Edible extends Entity {
 				"an undefined ration",
 				"An undefined ration lies here.",
 				"This ration is undefined.",
-				0, Material.UNDEFINED);
+				0, Material.UNDEFINED, Size.DIMINUTIVE);
 		
 	}
 	

@@ -2,9 +2,18 @@ package omnimudplus;
 import java.util.*;
 import java.util.concurrent.*;
 
+import Runnables.WorkerRunnable;
+import omnimudplus.Account.Account;
+import omnimudplus.Account.TempAccount;
+import omnimudplus.Database.Database;
 import omnimudplus.Entities.Building;
+import omnimudplus.Entities.Dwelling;
 import omnimudplus.Entities.Entity;
 import omnimudplus.Entities.Mobile;
+import omnimudplus.Geography.Area;
+import omnimudplus.Geography.Direction;
+import omnimudplus.Geography.OverworldArea;
+import omnimudplus.Geography.Room;
 
 import java.io.*;
 import java.net.*;
@@ -15,23 +24,23 @@ import java.nio.channels.ServerSocketChannel;
 
 public class Omnimud {
 
-    public static List<Mobile> mobiles = new ArrayList<Mobile>();
+    //private static List<Mobile> mobiles = new ArrayList<Mobile>();
     
-    public static List<Entity> objects = new ArrayList<Entity>();
+    //private static List<Entity> objects = new ArrayList<Entity>();
 
-    public static final LockObject playerlock = new LockObject();
+    private static final LockObject playerlock = new LockObject();
     
-    public static List<ConnectNode> players = new ArrayList<ConnectNode>();
-    
-    public static final HashMap<Mobile, ConnectNode> playershells = new LinkedHashMap<Mobile, ConnectNode>();
+    private static List<ConnectNode> players = new ArrayList<ConnectNode>();
     
     // TODO
-    private static ObjectInputStream ois;
+    //private static ObjectInputStream ois;
     
     // TODO
-    private static ObjectOutputStream oos;
+    //private static ObjectOutputStream oos;
     
-    public static Area areatest;
+    public static Area<?> areatest;
+    
+    public static Database database;
     
     public static void main(String[] args) {
     	
@@ -50,6 +59,8 @@ public class Omnimud {
     public static void run() {
     	
         try {
+        	
+        	database = new Database();
         	
             // Selector stuff
             
@@ -128,7 +139,7 @@ public class Omnimud {
             	
             } */
             
-            areatest = new Area();
+            areatest = new OverworldArea();
             
             areatest.newRoom();
             
@@ -142,11 +153,9 @@ public class Omnimud {
             
             System.out.println("Test area generated, with surrounding rooms.");
             
-            Building testbuilding = new Building();
+            Dwelling testbuilding = new Dwelling();
             
             origin.setFeature(testbuilding);
-            
-            testbuilding.setArea(origin.getArea());
             
             Physics.populateRadialMap();
             
@@ -257,7 +266,7 @@ public class Omnimud {
 			        			
 			        			System.out.println("Read error - cleaning up key.");
 			        			ConnectNode temp = (ConnectNode)key.attachment();
-			        			temp.cleanup();
+			        			cleanup(temp);
 			        			continue;
 			        			
 			        		}
@@ -289,7 +298,7 @@ public class Omnimud {
 		        		System.out.println("Key canceled.");
 		        		ConnectNode temp = (ConnectNode)key.attachment();
 		        		
-		        		temp.cleanup();
+		        		cleanup(temp);
 		        		
 		        	}
 		        	
@@ -304,6 +313,104 @@ public class Omnimud {
         }
         
     }
+    
+    public static void cleanup(ConnectNode cn) {
+    	
+    	ConnectionState connState = cn.getConnectionState();
+    	
+    	Account account = cn.getAccount();
+    	
+    	Mobile shell = cn.getShell();
+    	
+    	SocketChannel client = cn.getClient();
+    	
+		System.out.println("Cleaning up " + account.getName());
+		
+		try {
+		
+			if (!(account instanceof TempAccount)) {
+			
+				Database.saveAccount(account);
+			
+			}
+			
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+			
+		}
+		
+		if (connState == ConnectionState.IN_GAME) {
+		
+			System.out.println("Cleaning up shell!");
+			
+			if (shell.getRoom() != null) {
+				
+				shell.setRoom(null);
+				
+			}
+			
+			if (shell.isTraveling()) {
+				
+				shell.travelStop();
+				
+			}
+			
+			shell.stopRegen();
+			
+			try {
+			
+				client.close();
+				
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+				
+			}
+			
+			synchronized (playerlock) {
+				
+				players.remove(cn);
+			
+			}
+		
+		} else {
+			
+			try {
+				
+				client.close();
+				
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+				
+			}
+			
+		}
+    	
+    }
+    
+    public static void who(ConnectNode cn) {
+    	
+    	StringBuilder sb = new StringBuilder();
+    	
+		synchronized (playerlock) {
+			
+			sb.append("Currently connected:\n");
+			
+			for (ConnectNode node : Omnimud.players) {
+				
+				sb.append(node.getShell().getName() + "\n");
+				
+			}
+			
+			sb.append(Omnimud.players.size() + " players are connected.");
+		
+		}
+		
+		cn.println(sb.toString());
+    	
+    }
         
     public static void shutdown() {
         	
@@ -315,11 +422,11 @@ public class Omnimud {
 	
 			        for (ConnectNode cn : players) {
 			
-			            System.out.println("Killing player connection (" + cn.getShell().getName() + ")");
+			            System.out.println("Killing player connection (" + cn.getClient().getRemoteAddress() + ")");
 			
 			            cn.println("Server shutting down. Have a nice day!");
 			
-			            cn.cleanup();
+			            cleanup(cn);
 			
 			        }
 		        
